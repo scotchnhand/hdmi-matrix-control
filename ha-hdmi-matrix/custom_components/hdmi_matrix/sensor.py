@@ -1,17 +1,23 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import MatrixCoordinator
 from .entity import MatrixEntity
 
+if TYPE_CHECKING:
+    from . import MatrixConfigEntry
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
-    coordinator: MatrixCoordinator = hass.data[DOMAIN][entry.entry_id]
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: MatrixConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    coordinator = entry.runtime_data
     async_add_entities([
         MatrixDeviceSensor(coordinator, entry.entry_id, "ip", "IP address", "mdi:ip-network"),
         MatrixDeviceSensor(coordinator, entry.entry_id, "firmware", "Firmware", "mdi:chip"),
@@ -19,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
 
 class MatrixDeviceSensor(MatrixEntity, SensorEntity):
-    _attr_entity_category = "diagnostic"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, coordinator: MatrixCoordinator, entry_id: str, field: str, label: str, icon: str) -> None:
         super().__init__(coordinator, entry_id)

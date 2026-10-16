@@ -14,7 +14,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from matrix_client import EDID_PRESETS, MatrixClient, MatrixError  # noqa: E402
+from matrix_client import EDID_PRESETS, MatrixAuthError, MatrixClient, MatrixError  # noqa: E402
 
 # Real responses captured from the device while reverse-engineering the
 # protocol -- see docs/PROTOCOL.md. Deliberately kept verbatim, trailing
@@ -93,6 +93,26 @@ class TestLogin(unittest.TestCase):
                 client.login()
         self.assertIn("Invalid user or password", str(ctx.exception))
         self.assertFalse(client._logged_in)
+
+    def test_login_rejection_is_an_auth_error_not_a_transport_error(self):
+        client = make_client()
+        with patch.object(client, "_request", return_value=REAL_LOGIN_FAIL):
+            with self.assertRaises(MatrixAuthError):
+                client.login()
+        with patch.object(client, "_request", side_effect=MatrixError("unreachable")):
+            with self.assertRaises(MatrixError) as ctx:
+                client.login()
+        self.assertNotIsInstance(ctx.exception, MatrixAuthError)
+
+
+class TestTransportErrors(unittest.TestCase):
+    def test_read_timeout_becomes_matrix_error(self):
+        # A locked-up matrix accepts the connection then never answers, which
+        # urlopen surfaces as a bare TimeoutError rather than a URLError.
+        client = make_client()
+        with patch("urllib.request.urlopen", side_effect=TimeoutError("timed out")):
+            with self.assertRaises(MatrixError):
+                client._request("GET", "video.get")
 
 
 class TestGetState(unittest.TestCase):

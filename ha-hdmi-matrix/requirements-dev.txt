@@ -1,4 +1,7 @@
 # Dev/test-only dependencies for the Home Assistant integration.
-pytest>=9.1.1
-pytest-cov>=7.1.0
+# pytest-homeassistant-custom-component pins Home Assistant itself plus the
+# exact pytest / pytest-cov / pytest-asyncio versions that HA release is
+# tested with, so those aren't listed separately (they'd conflict). Needs
+# the same Python as current Home Assistant (3.13+).
+pytest-homeassistant-custom-component==0.13.316
 ruff>=0.17.0

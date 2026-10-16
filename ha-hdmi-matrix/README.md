@@ -22,11 +22,24 @@ One HA device ("HDMI Matrix") with:
 - **`select.left_source` / `select.right_source`** — pick which input
   (by name) feeds each output. This is the main control; use it in
   automations like "when the Apple TV turns on, route AppleTv to Left".
+  Stays usable while the output is off, so you can pick the source before
+  powering the display on.
 - **`switch.left_power` / `switch.right_power`** — per-output on/off.
+- **`select.audio_return_arc` / `select.audio_extraction`** — which
+  output's audio feeds the ARC / extraction port: `Off` or an output name
+  (e.g. `Left`). The `source` attribute shows the input currently routed
+  to that output — i.e. what you'll actually hear.
+- **`text.input_1_name` … `text.output_2_name`** — rename ports (3–15
+  letters, numbers, or underscores, the device's own rule). Names must be
+  unique within inputs / outputs, since the selects above use them as
+  options. Renaming changes those options but never any entity IDs.
 - **`select.<input>_edid`** — EDID profile per input (resolution/HDR/
   channel-count presets), as a `config`-category entity.
 - **`button.reboot`** — restart the matrix.
 - **`sensor.ip_address` / `sensor.firmware`** — diagnostics.
+
+Entity IDs are prefixed with the device name, e.g.
+`select.hdmi_matrix_left_source`.
 
 Polls every 5 seconds via a `DataUpdateCoordinator`, matching the
 cadence the matrix's own UI uses.
@@ -54,8 +67,18 @@ No YAML required — this is a native config-flow integration.
   interval and serialized requests are chosen to be gentle on it; if the
   device ever stops responding, a power cycle recovers it with no
   settings lost.
-- Not yet tested against a live Home Assistant instance in this session
-  (the Home Assistant MCP connector used to inspect your instance failed
-  to connect) — the code follows standard HA integration patterns
-  (DataUpdateCoordinator, config flow, CoordinatorEntity) but you should
-  verify entity setup once installed.
+- Tested inside a real in-process Home Assistant via
+  `pytest-homeassistant-custom-component` (config flow, entity setup, every
+  command, polling failures — see `tests/`), but with the matrix itself
+  faked. It hasn't yet been run against real hardware from a live HA
+  install, so report anything odd via the bug template.
+
+## Running the tests
+
+Needs Python 3.13+ (current Home Assistant's minimum):
+
+```bash
+cd ha-hdmi-matrix
+python3.13 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
+.venv/bin/python -m pytest tests -v
+```

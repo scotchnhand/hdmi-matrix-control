@@ -14,6 +14,11 @@ these are welcome — see [DEVELOPMENT.md](DEVELOPMENT.md).
       (config flow, `select`/`switch`/`button`/`sensor` entities)
 - [x] Unit + integration test suite for both (protocol parsing,
       validation, and a real in-process HTTP server test for the web app)
+- [x] HA integration tested inside a real in-process Home Assistant
+      (`pytest-homeassistant-custom-component`): config flow, entity
+      setup, commands, poll failures
+- [x] HA integration: audio ARC/extraction selects and port renaming,
+      matching the web and iOS apps
 - [x] CI: lint, test + coverage, HA manifest validation (`hassfest`), a
       protocol-consistency check between the two `matrix_client.py`
       copies, and weekly CodeQL + Dependabot
@@ -71,9 +76,6 @@ exactly that.
 
 ### Home Assistant integration
 
-- [ ] Deeper test coverage using `pytest-homeassistant-custom-component`
-      once the integration has real-device mileage (currently tested at
-      the protocol layer only — see `ha-hdmi-matrix/tests/`)
 - [ ] HACS listing (`hacs.json` + repo topics) once the integration has
       been run against a live HA instance
 - [ ] Scene/automation examples in the README (e.g. "Apple TV on → route
