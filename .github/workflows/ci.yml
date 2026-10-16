@@ -123,6 +123,10 @@ jobs:
         working-directory: ios-app
     steps:
       - uses: actions/checkout@v4
+      # The app targets iOS 26 (Liquid Glass), so it needs the Xcode 26 SDK.
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "26"
       - name: Test MatrixKit (protocol client)
         run: swift test
         working-directory: ios-app/MatrixKit

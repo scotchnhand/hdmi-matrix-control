@@ -29,7 +29,10 @@ these are welcome — see [DEVELOPMENT.md](DEVELOPMENT.md).
 - [ ] Bonjour discovery of the matrix instead of typing its host
 - [ ] Home Screen widget / Control Center control for one-tap routing
       presets (App Intents)
-- [ ] A proper 1024px app icon (currently upscaled from the PWA's 512px)
+- [x] Liquid Glass redesign (iOS 26+), with a custom app icon in
+      standard / dark / tinted variants
+- [ ] Carry the new routing-diagram icon over to the PWA and HA
+      integration for a consistent look
 
 ## Why this list exists ("continuous improvement" in practice)
 
