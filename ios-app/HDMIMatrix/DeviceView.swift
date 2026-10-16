@@ -58,6 +58,7 @@ struct DeviceView: View {
                     }
                 }
                 .tint(.primary)
+                .accessibilityIdentifier("connection-row")
             } header: {
                 Text("Connection")
             }
@@ -108,7 +109,15 @@ struct DeviceView: View {
                 }
                 Button("Change password") {
                     let (u, p) = (user, newPassword)
-                    store.perform { try await $0.setCredentials(user: u, password: p) }
+                    store.perform(onSuccess: {
+                        // Keep the app's own login in step, or the next
+                        // re-login (e.g. after a reboot) would fail.
+                        if !settings.demoMode {
+                            settings.save(host: settings.host, username: u, password: p, demoMode: false)
+                        }
+                    }) {
+                        try await $0.setCredentials(user: u, password: p)
+                    }
                     newPassword = ""
                     confirmPassword = ""
                 }
@@ -116,7 +125,7 @@ struct DeviceView: View {
             } header: {
                 Text("Change device password")
             } footer: {
-                Text("5–15 letters, numbers, or underscores. Update the app's connection settings afterwards.")
+                Text("5–15 letters, numbers, or underscores. The app updates its own saved login to match.")
             }
 
             Section("Danger Zone") {
@@ -166,7 +175,7 @@ struct DeviceView: View {
 
     private func confirmMessage(_ action: DangerAction) -> String {
         switch action {
-        case .network: "The matrix will move to \(ip). Update the app's host setting to match."
+        case .network: "The matrix will move to \(ip), and the app will reconnect to it there."
         case .reboot: "Restarts the matrix. Takes about 15 seconds."
         case .factoryReset: "Erases all routing, names, EDID, and network settings."
         }
@@ -176,11 +185,18 @@ struct DeviceView: View {
         switch action {
         case .network:
             let (i, m, g) = (ip, mask, gateway)
-            store.perform { try await $0.setNetwork(ip: i, mask: m, gateway: g) }
+            store.perform(expectOffline: .seconds(30), onSuccess: {
+                // Follow the matrix to its new address.
+                if !settings.demoMode {
+                    settings.save(host: i, username: settings.username, password: settings.password, demoMode: false)
+                }
+            }) {
+                try await $0.setNetwork(ip: i, mask: m, gateway: g)
+            }
         case .reboot:
-            store.perform { try await $0.reboot() }
+            store.reboot()
         case .factoryReset:
-            store.perform { try await $0.factoryReset() }
+            store.factoryReset()
         }
     }
 }

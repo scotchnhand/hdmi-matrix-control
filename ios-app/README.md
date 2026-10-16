@@ -51,6 +51,12 @@ or its IP) and login. The password is stored in the Keychain.
 On a real device iOS will ask for **Local Network** permission the first
 time — allow it, or the app can't reach the matrix.
 
+## User guide
+
+**[docs/ios-guide/](../docs/ios-guide/README.md)** walks through every
+screen with screenshots, from installing and connecting through routing,
+EDID, and troubleshooting.
+
 ## Tests
 
 The protocol layer is a plain Swift package, so it tests on macOS with no
@@ -59,6 +65,20 @@ simulator:
 ```bash
 cd ios-app/MatrixKit && swift test
 ```
+
+The app has XCUITests (`HDMIMatrixUITests/`) that drive every feature
+against the demo matrix. The app launches with `-ui-testing`, which forces
+demo mode with throwaway settings. Run them with ⌘U in Xcode, or:
+
+```bash
+cd ios-app && xcodebuild test -project HDMIMatrix.xcodeproj -scheme HDMIMatrix \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+```
+
+`testWalkthrough` also captures the user guide's screenshots. After a UI
+change, refresh them with `ios-app/scripts/capture_screenshots.sh`. CI
+runs both suites on every PR and uploads the walkthrough screenshots as
+an `ios-ui-screenshots` artifact.
 
 ## Feature parity with the web app
 

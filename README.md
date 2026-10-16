@@ -14,7 +14,7 @@ cloud, no vendor app):
 |---|---|
 | **[`hdmi-matrix-ui/`](hdmi-matrix-ui/)** | A local web app — zero-dependency Python backend + a dark-mode, high-contrast, installable-as-a-PWA frontend |
 | **[`ha-hdmi-matrix/`](ha-hdmi-matrix/)** | A Home Assistant custom integration — `select`/`switch`/`button`/`sensor` entities for routing, power, and EDID |
-| **[`ios-app/`](ios-app/)** | A native SwiftUI iPhone/iPad app that talks to the matrix directly — no backend needed |
+| **[`ios-app/`](ios-app/)** | A native SwiftUI iPhone/iPad app (iOS 26, Liquid Glass) that talks to the matrix directly — no backend needed. [User guide](docs/ios-guide/README.md) |
 
 <p align="center">
   <img src="docs/images/web-app-dark.jpg" width="47%" alt="Web app, dark mode" />

@@ -23,6 +23,7 @@ struct RenameSheet: View {
                         .autocorrectionDisabled()
                         .submitLabel(.done)
                         .onSubmit(save)
+                        .accessibilityIdentifier("rename-field")
                 } footer: {
                     Text("3–15 letters, numbers, or underscores.")
                         .foregroundStyle(isValid || name.isEmpty ? Color.secondary : Color.red)

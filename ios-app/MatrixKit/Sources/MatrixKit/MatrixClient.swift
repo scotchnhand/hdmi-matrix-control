@@ -17,6 +17,22 @@ public actor MatrixClient: MatrixService {
     private var loggedIn = false
     private var tail: Task<Void, Never>?
 
+    /// Reduce whatever the user typed to a bare host (and optional port):
+    /// `http://192.168.1.168/` and ` matrix.local ` both work. Returns nil
+    /// when nothing host-like is left.
+    public static func normalizeHost(_ raw: String) -> String? {
+        var host = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let range = host.range(of: "://") {
+            host = String(host[range.upperBound...])
+        }
+        if let slash = host.firstIndex(where: { $0 == "/" || $0 == "?" || $0 == "#" }) {
+            host = String(host[..<slash])
+        }
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: ".-:[]_"))
+        guard !host.isEmpty, host.unicodeScalars.allSatisfy(allowed.contains) else { return nil }
+        return host
+    }
+
     public init(
         host: String,
         username: String = "admin",
@@ -24,7 +40,7 @@ public actor MatrixClient: MatrixService {
         timeout: TimeInterval = 4,
         transport: Transport? = nil
     ) {
-        self.host = host
+        self.host = Self.normalizeHost(host) ?? host
         self.username = username
         self.password = password
         self.transport = transport ?? Self.urlSessionTransport(timeout: timeout)
@@ -50,7 +66,7 @@ public actor MatrixClient: MatrixService {
 
     private func request(_ method: String, _ path: String, body: String? = nil) async throws -> String {
         guard let url = URL(string: "http://\(host)/\(path)\(Self.timestamp())") else {
-            throw MatrixError("Invalid matrix host: \(host)")
+            throw MatrixError("Invalid matrix host: \(host)", isConnectivity: true)
         }
         var req = URLRequest(url: url)
         req.httpMethod = method
@@ -64,7 +80,7 @@ public actor MatrixClient: MatrixService {
         } catch let error as MatrixError {
             throw error
         } catch {
-            throw MatrixError("Could not reach matrix at \(host): \(error.localizedDescription)")
+            throw MatrixError("Could not reach matrix at \(host): \(error.localizedDescription)", isConnectivity: true)
         }
     }
 

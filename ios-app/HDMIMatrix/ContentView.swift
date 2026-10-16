@@ -53,6 +53,18 @@ struct ContentView: View {
         } message: { message in
             Text(message)
         }
+        .alert(
+            "Heads up",
+            isPresented: Binding(
+                get: { store.notice != nil },
+                set: { if !$0 { store.notice = nil } }
+            ),
+            presenting: store.notice
+        ) { _ in
+            Button("OK", role: .cancel) {}
+        } message: { message in
+            Text(message)
+        }
     }
 }
 

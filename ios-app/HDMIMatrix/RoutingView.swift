@@ -66,6 +66,7 @@ struct OutputCard: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityHint("Rename this output")
+                    .accessibilityIdentifier("output-\(output.index)-name")
 
                     Spacer()
 
@@ -79,6 +80,7 @@ struct OutputCard: View {
                     .labelsHidden()
                     .tint(color)
                     .accessibilityLabel("\(output.name) power")
+                    .accessibilityIdentifier("output-\(output.index)-power")
                 }
 
                 LazyVGrid(columns: columns, spacing: 10) {
@@ -125,11 +127,11 @@ struct OutputCard: View {
                             .strokeBorder(.primary.opacity(0.12), lineWidth: 1)
                     }
                 }
-                .opacity(output.power || isActive ? 1 : 0.5)
                 .contentShape(Capsule())
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Route \(input.name) to \(output.name)")
+        .accessibilityIdentifier("route-\(output.index)-\(input.index)")
         .accessibilityAddTraits(isActive ? .isSelected : [])
     }
 }
@@ -169,6 +171,7 @@ struct AudioPicker: View {
                 }
             }
             .pickerStyle(.segmented)
+            .accessibilityIdentifier("audio-\(title.lowercased())")
         }
     }
 }

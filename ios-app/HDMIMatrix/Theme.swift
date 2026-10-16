@@ -6,6 +6,8 @@ import UIKit
 enum Theme {
     static let blue = Color(light: 0x0A5FB4, dark: 0x5BB0FF)
     static let green = Color(light: 0x0F7A3D, dark: 0x33D17A)
+    static let backdropTop = Color(light: 0xE8EEF7, dark: 0x13203A)
+    static let backdropBottom = Color(light: 0xF6F8FB, dark: 0x070B13)
 
     static func color(forOutput index: Int) -> Color {
         index == 2 ? green : blue
@@ -41,9 +43,7 @@ struct MatrixBackdrop: View {
         let dark = colorScheme == .dark
         ZStack {
             LinearGradient(
-                colors: dark
-                    ? [Color(light: 0, dark: 0x13203A), Color(light: 0, dark: 0x070B13)]
-                    : [Color(light: 0xE8EEF7, dark: 0), Color(light: 0xF6F8FB, dark: 0)],
+                colors: [Theme.backdropTop, Theme.backdropBottom],
                 startPoint: .top,
                 endPoint: .bottom
             )

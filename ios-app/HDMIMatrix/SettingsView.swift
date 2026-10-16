@@ -1,3 +1,4 @@
+import MatrixKit
 import SwiftUI
 
 /// Where the matrix lives and how to log in to it.
@@ -15,6 +16,7 @@ struct SettingsView: View {
             Form {
                 Section {
                     Toggle("Demo mode", isOn: $demoMode)
+                        .accessibilityIdentifier("demo-toggle")
                 } footer: {
                     Text("Uses a simulated matrix — no hardware needed.")
                 }
@@ -53,7 +55,7 @@ struct SettingsView: View {
                         settings.save(host: host, username: username, password: password, demoMode: demoMode)
                         dismiss()
                     }
-                    .disabled(!demoMode && host.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .disabled(!demoMode && MatrixClient.normalizeHost(host) == nil)
                 }
             }
             .onAppear {

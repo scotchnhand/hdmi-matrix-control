@@ -17,8 +17,10 @@ let size = 1024
 // Run from the repo root.
 let assets = URL(fileURLWithPath: "ios-app/HDMIMatrix/Assets.xcassets")
 let outDir = assets.appendingPathComponent("AppIcon.appiconset")
-// The transparent (dark) render doubles as in-app artwork.
-let artworkFile = assets.appendingPathComponent("Artwork.imageset/artwork.png")
+// The transparent (dark) render doubles as in-app artwork, downscaled to
+// what the app actually displays (up to 160pt) at 1x/2x/3x.
+let artworkDir = assets.appendingPathComponent("Artwork.imageset")
+let artworkPoints = 160
 
 enum Variant: String, CaseIterable {
     case standard = "icon-1024.png"
@@ -208,10 +210,25 @@ func render(_ variant: Variant) throws {
     print("wrote \(variant.rawValue)")
 
     if variant == .dark {
-        let fm = FileManager.default
-        try? fm.removeItem(at: artworkFile)
-        try fm.copyItem(at: outDir.appendingPathComponent(variant.rawValue), to: artworkFile)
-        print("wrote Artwork.imageset/artwork.png")
+        for scale in 1...3 {
+            let px = artworkPoints * scale
+            guard let small = CGContext(
+                data: nil, width: px, height: px, bitsPerComponent: 8, bytesPerRow: 0,
+                space: space, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            ) else { throw NSError(domain: "icon", code: 4) }
+            small.interpolationQuality = .high
+            small.draw(image, in: CGRect(x: 0, y: 0, width: px, height: px))
+            let name = "artwork@\(scale)x.png"
+            guard let resized = small.makeImage(),
+                  let out = CGImageDestinationCreateWithURL(
+                      artworkDir.appendingPathComponent(name) as CFURL,
+                      UTType.png.identifier as CFString, 1, nil
+                  )
+            else { throw NSError(domain: "icon", code: 5) }
+            CGImageDestinationAddImage(out, resized, nil)
+            guard CGImageDestinationFinalize(out) else { throw NSError(domain: "icon", code: 6) }
+            print("wrote Artwork.imageset/\(name)")
+        }
     }
 }
 

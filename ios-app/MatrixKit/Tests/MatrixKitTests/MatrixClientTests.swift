@@ -18,12 +18,16 @@ let loginFail = #"settingsLoginCallback({"status":"6","str":"Invalid user or pas
 final class FakeDevice: @unchecked Sendable {
     private let lock = NSLock()
     private(set) var requests: [(method: String, path: String, body: String?)] = []
+    private(set) var urls: [URL] = []
     var login = loginOK
 
     func handle(_ request: URLRequest) async throws -> String {
         let path = request.url!.path.trimmingCharacters(in: .decimalDigits)
         let body = request.httpBody.map { String(decoding: $0, as: UTF8.self) }
-        lock.withLock { requests.append((request.httpMethod ?? "GET", path, body)) }
+        lock.withLock {
+            requests.append((request.httpMethod ?? "GET", path, body))
+            urls.append(request.url!)
+        }
         switch path {
         case "/login.set": return login
         case "/video.get": return realVideo
@@ -149,6 +153,47 @@ final class MatrixClientTests: XCTestCase {
         // the triples never interleave.
         let paths = device.requests.map(\.path).filter { $0 != "/login.set" }
         XCTAssertEqual(paths, Array(repeating: ["/video.get", "/audio.get", "/edid.get"], count: 5).flatMap { $0 })
+    }
+}
+
+final class HostTests: XCTestCase {
+    func testNormalizesPastedURLs() {
+        XCTAssertEqual(MatrixClient.normalizeHost("http://192.168.1.168/"), "192.168.1.168")
+        XCTAssertEqual(MatrixClient.normalizeHost("  matrix.local "), "matrix.local")
+        XCTAssertEqual(MatrixClient.normalizeHost("https://matrix.local:8080/index.html?x=1"), "matrix.local:8080")
+        XCTAssertNil(MatrixClient.normalizeHost("   "))
+        XCTAssertNil(MatrixClient.normalizeHost("my matrix"))
+    }
+
+    func testClientUsesNormalizedHost() async throws {
+        let device = FakeDevice()
+        let client = MatrixClient(host: "http://matrix.test/", transport: { try await device.handle($0) })
+        _ = try await client.state()
+        XCTAssertEqual(device.urls.first?.host, "matrix.test")
+    }
+
+    func testUnreachableDeviceIsConnectivityError() async {
+        struct Offline: Error {}
+        let client = MatrixClient(host: "matrix.test", transport: { _ in throw Offline() })
+        do {
+            _ = try await client.state()
+            XCTFail("expected failure")
+        } catch let error as MatrixError {
+            XCTAssertTrue(error.isConnectivity)
+        } catch {
+            XCTFail("expected MatrixError, got \(error)")
+        }
+    }
+
+    func testValidationErrorIsNotConnectivity() async {
+        do {
+            try await FakeDevice().client().setRoute(output: 9, input: 1)
+            XCTFail("expected failure")
+        } catch let error as MatrixError {
+            XCTAssertFalse(error.isConnectivity)
+        } catch {
+            XCTFail("expected MatrixError")
+        }
     }
 }
 

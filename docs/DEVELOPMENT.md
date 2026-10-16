@@ -5,14 +5,16 @@
 ```
 hdmi-matrix-ui/      Local web app (Python stdlib backend + PWA frontend)
 ha-hdmi-matrix/       Home Assistant custom integration
-docs/                 This file, PROTOCOL.md, ROADMAP.md
+ios-app/              Native SwiftUI app + MatrixKit Swift package
+docs/                 This file, PROTOCOL.md, ROADMAP.md, ios-guide/
 .github/              CI workflows, issue/PR templates, Dependabot config
 pyproject.toml        Shared ruff config (repo-wide)
 ```
 
 Each subproject is independently runnable and independently tested — see
 their own READMEs ([hdmi-matrix-ui](../hdmi-matrix-ui/README.md),
-[ha-hdmi-matrix](../ha-hdmi-matrix/README.md)) for how to run them.
+[ha-hdmi-matrix](../ha-hdmi-matrix/README.md),
+[ios-app](../ios-app/README.md)) for how to run them.
 
 ## Setup
 
@@ -51,6 +53,28 @@ Tests never touch the real matrix or a real Home Assistant instance:
 - `ha-hdmi-matrix/tests/test_matrix_client.py` — same protocol-layer
   coverage for that copy of the client
 
+### iOS app
+
+Needs a Mac with Xcode 26+.
+
+```bash
+cd ios-app/MatrixKit && swift test            # protocol client, no simulator
+cd ios-app && xcodebuild test -project HDMIMatrix.xcodeproj -scheme HDMIMatrix \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro'   # UI tests
+```
+
+- `ios-app/MatrixKit/Tests/` — the Swift protocol client against the
+  same captured device responses as the Python suites, plus request
+  serialization, host normalization, and error classification
+- `ios-app/HDMIMatrixUITests/` — XCUITests that drive every screen
+  against the demo matrix. `testWalkthrough` also produces the
+  [user guide](ios-guide/README.md)'s screenshots; if you change the UI,
+  re-run `ios-app/scripts/capture_screenshots.sh` and commit the images.
+
+CI runs both (`ios-unit` and `ios-ui` jobs) on every PR, and attaches the
+walkthrough screenshots as an `ios-ui-screenshots` artifact so reviewers
+can see UI changes without building the app.
+
 If you're testing against the **real hardware**, read the "known hardware
 quirk" note in [docs/PROTOCOL.md](PROTOCOL.md) first — it can lock up
 under rapid requests, and a power cycle is the recovery.
@@ -67,7 +91,7 @@ under rapid requests, and a power cycle is the recovery.
 3. Add/update tests for the change. A bug fix should come with a test
    that fails without the fix.
 4. `ruff check .` and `pytest tests/ -v` in whatever subproject(s) you
-   touched.
+   touched; for `ios-app/`, `swift test` and the UI tests (see above).
 5. If this closes or adds a planned item, update
    [ROADMAP.md](ROADMAP.md) in the same PR.
 6. Open a PR against `main` — the template will prompt for what changed,

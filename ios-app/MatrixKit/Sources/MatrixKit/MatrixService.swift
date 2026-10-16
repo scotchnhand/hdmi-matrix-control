@@ -2,7 +2,15 @@ import Foundation
 
 public struct MatrixError: LocalizedError, Equatable, Sendable {
     public var message: String
-    public init(_ message: String) { self.message = message }
+    /// True when the device couldn't be reached at all (as opposed to it
+    /// rejecting a request, or input failing validation).
+    public var isConnectivity: Bool
+
+    public init(_ message: String, isConnectivity: Bool = false) {
+        self.message = message
+        self.isConnectivity = isConnectivity
+    }
+
     public var errorDescription: String? { message }
 }
 

@@ -54,6 +54,7 @@ struct InputCard: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityHint("Rename this input")
+                    .accessibilityIdentifier("input-\(input.index)-name")
 
                     Spacer()
 
@@ -100,6 +101,7 @@ struct InputCard: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("EDID preset for \(input.name): \(edidPresets[input.edidPreset])")
+                .accessibilityIdentifier("input-\(input.index)-edid")
 
                 if !input.edidDetail.isEmpty, input.edidDetail != edidPresets[input.edidPreset] {
                     Text(input.edidDetail)

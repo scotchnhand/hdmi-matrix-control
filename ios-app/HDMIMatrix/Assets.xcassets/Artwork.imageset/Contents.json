@@ -1,7 +1,8 @@
 {
   "images" : [
-    { "filename" : "artwork.png", "idiom" : "universal" }
+    { "filename" : "artwork@1x.png", "idiom" : "universal", "scale" : "1x" },
+    { "filename" : "artwork@2x.png", "idiom" : "universal", "scale" : "2x" },
+    { "filename" : "artwork@3x.png", "idiom" : "universal", "scale" : "3x" }
   ],
-  "info" : { "author" : "xcode", "version" : 1 },
-  "properties" : { "preserves-vector-representation" : false }
+  "info" : { "author" : "xcode", "version" : 1 }
 }

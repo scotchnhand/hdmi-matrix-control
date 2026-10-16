@@ -33,8 +33,19 @@ final class ConnectionSettings {
         demoMode = defaults.object(forKey: Key.demoMode) as? Bool ?? true
     }
 
+    /// UI tests launch with `-ui-testing`: always the demo matrix, with
+    /// throwaway settings so runs are repeatable and never touch real ones.
+    static func forLaunch() -> ConnectionSettings {
+        guard CommandLine.arguments.contains("-ui-testing") else { return ConnectionSettings() }
+        let suite = "HDMIMatrix.UITests"
+        UserDefaults().removePersistentDomain(forName: suite)
+        let defaults = UserDefaults(suiteName: suite)!
+        defaults.set(true, forKey: Key.demoMode)
+        return ConnectionSettings(defaults: defaults)
+    }
+
     func save(host: String, username: String, password: String, demoMode: Bool) {
-        self.host = host.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.host = MatrixClient.normalizeHost(host) ?? host.trimmingCharacters(in: .whitespacesAndNewlines)
         self.username = username
         self.password = password
         self.demoMode = demoMode
