@@ -114,3 +114,20 @@ jobs:
           test -f hdmi-matrix-ui/frontend/icons/icon.svg
           test -f hdmi-matrix-ui/frontend/icons/icon-180.png
           test -f hdmi-matrix-ui/frontend/icons/icon-512.png
+
+  ios:
+    name: iOS app (MatrixKit tests + simulator build)
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: ios-app
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test MatrixKit (protocol client)
+        run: swift test
+        working-directory: ios-app/MatrixKit
+      - name: Build app for the simulator
+        run: |
+          xcodebuild -project HDMIMatrix.xcodeproj -scheme HDMIMatrix \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO build
