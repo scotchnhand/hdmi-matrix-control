@@ -1,0 +1,13 @@
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+exclude = [".git", "__pycache__", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = [
+    "E501",  # line length is advisory here; several JSONP/wire-protocol strings read better unwrapped
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/*" = ["B011"]

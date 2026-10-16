@@ -1,0 +1,53 @@
+name: Bug report
+description: Something in the web app or Home Assistant integration isn't working right
+labels: ["bug", "triage"]
+body:
+  - type: dropdown
+    id: component
+    attributes:
+      label: Where's the bug?
+      options:
+        - Web app (hdmi-matrix-ui)
+        - Home Assistant integration (ha-hdmi-matrix)
+        - Both / not sure
+        - Documentation
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what actually happened.
+      placeholder: Tapping an input chip to route AppleTv to Left does nothing; the UI shows "Connection lost".
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1.
+        2.
+        3.
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs / console output
+      description: Backend server output, browser devtools console, or Home Assistant logs (Settings → System → Logs). Redact your matrix password if it appears anywhere.
+      render: shell
+
+  - type: input
+    id: matrix-model
+    attributes:
+      label: Matrix hardware / firmware version
+      description: From Advanced → Device in the web app, or the matrix's own web UI "System" tab.
+      placeholder: "MCU V0.0.11 / Web V0.0.4"
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: "macOS 15, Python 3.12, Home Assistant 2025.x, Chrome 130"

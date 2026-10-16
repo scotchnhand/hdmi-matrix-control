@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HDMI Matrix</title>
+<meta name="description" content="Control panel for the 4x2 HDMI matrix switcher">
+<meta name="theme-color" content="#0b0d10" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="topbar__title">
+      <h1>HDMI Matrix</h1>
+      <span class="status" id="connStatus" data-state="connecting">
+        <span class="status__dot" aria-hidden="true"></span>
+        <span class="status__label">Connecting…</span>
+      </span>
+    </div>
+    <button class="icon-btn" id="themeToggle" type="button" aria-label="Toggle theme">
+      <svg class="icon icon--sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="icon icon--moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
+    </button>
+  </header>
+
+  <main class="content">
+
+    <section class="card" aria-labelledby="routingHeading">
+      <h2 id="routingHeading">Routing</h2>
+      <p class="card__hint">Tap an input to send it to that output.</p>
+      <div class="routing-grid" id="routingGrid">
+        <!-- output route cards injected by app.js -->
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="audioHeading">
+      <h2 id="audioHeading">Audio</h2>
+      <div class="audio-grid">
+        <div class="audio-control">
+          <span class="audio-control__label">ARC</span>
+          <div class="segmented" data-mode="arc" role="group" aria-label="ARC source">
+            <button type="button" data-value="0">Off</button>
+            <button type="button" data-value="1">Out-A</button>
+            <button type="button" data-value="2">Out-B</button>
+          </div>
+        </div>
+        <div class="audio-control">
+          <span class="audio-control__label">Extraction</span>
+          <div class="segmented" data-mode="extraction" role="group" aria-label="Audio extraction source">
+            <button type="button" data-value="0">Off</button>
+            <button type="button" data-value="1">Out-A</button>
+            <button type="button" data-value="2">Out-B</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="inputsHeading">
+      <h2 id="inputsHeading">Inputs &amp; EDID</h2>
+      <div class="input-list" id="inputList">
+        <!-- input rows injected by app.js -->
+      </div>
+    </section>
+
+    <section class="card card--collapsible">
+      <button class="card__toggle" id="advancedToggle" type="button" aria-expanded="false" aria-controls="advancedPanel">
+        <h2>Advanced</h2>
+        <svg class="icon icon--chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="card__panel" id="advancedPanel" hidden>
+
+        <div class="subsection">
+          <h3>Device</h3>
+          <dl class="info-list" id="deviceInfo">
+            <div><dt>IP address</dt><dd id="infoIp">–</dd></div>
+            <div><dt>Account</dt><dd id="infoAccount">–</dd></div>
+            <div><dt>Firmware</dt><dd id="infoFirmware">–</dd></div>
+          </dl>
+        </div>
+
+        <div class="subsection">
+          <h3>Network</h3>
+          <p class="card__hint">Only change this if you know what you're doing — a wrong value can make the matrix unreachable until you factory-reset it.</p>
+          <form class="form-grid" id="networkForm">
+            <label>IP address<input type="text" id="netIp" inputmode="decimal" placeholder="192.168.1.168" required></label>
+            <label>Subnet mask<input type="text" id="netMask" inputmode="decimal" placeholder="255.255.255.0" required></label>
+            <label>Gateway<input type="text" id="netGw" inputmode="decimal" placeholder="192.168.1.1" required></label>
+            <button type="submit" class="btn btn--primary">Apply network settings</button>
+          </form>
+        </div>
+
+        <div class="subsection">
+          <h3>Change password</h3>
+          <form class="form-grid" id="passwordForm">
+            <label>Username<input type="text" id="pwUser" minlength="5" maxlength="15" required></label>
+            <label>New password<input type="password" id="pwPass1" minlength="5" maxlength="15" required></label>
+            <label>Confirm password<input type="password" id="pwPass2" minlength="5" maxlength="15" required></label>
+            <button type="submit" class="btn btn--primary">Change password</button>
+          </form>
+        </div>
+
+        <div class="subsection subsection--danger">
+          <h3>Danger zone</h3>
+          <div class="danger-row">
+            <div>
+              <strong>Reboot</strong>
+              <p class="card__hint">Restarts the matrix. Takes about 15 seconds.</p>
+            </div>
+            <button type="button" class="btn btn--danger" id="rebootBtn">Reboot</button>
+          </div>
+          <div class="danger-row">
+            <div>
+              <strong>Factory reset</strong>
+              <p class="card__hint">Erases all routing, names, EDID, and network settings.</p>
+            </div>
+            <button type="button" class="btn btn--danger" id="factoryResetBtn">Factory reset</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="modal" id="renameModal" hidden>
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="renameModalTitle">
+    <h2 id="renameModalTitle">Rename port</h2>
+    <form id="renameForm">
+      <label>Name
+        <input type="text" id="renameInput" minlength="3" maxlength="15" pattern="[a-zA-Z0-9_]{3,15}" required>
+      </label>
+      <p class="card__hint">3–15 letters, numbers, or underscores.</p>
+      <div class="modal__actions">
+        <button type="button" class="btn" data-close>Cancel</button>
+        <button type="submit" class="btn btn--primary">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="app.js"></script>
+</body>
+</html>

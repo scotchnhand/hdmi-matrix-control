@@ -1,0 +1,18 @@
+version: 2
+updates:
+  # Keep CI Actions current -- the main ongoing "continuous improvement"
+  # surface, since both subprojects otherwise have very few dependencies.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "pip"
+    directory: "/hdmi-matrix-ui"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "pip"
+    directory: "/ha-hdmi-matrix"
+    schedule:
+      interval: "weekly"

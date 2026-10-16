@@ -1,0 +1,32 @@
+# Secrets / local config — never commit real matrix credentials
+hdmi-matrix-ui/backend/config.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+.venv/
+venv/
+
+# Coverage
+.coverage
+coverage.xml
+htmlcov/
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Tooling scratch dirs that can appear anywhere in the tree
+.claude/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log

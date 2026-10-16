@@ -1,0 +1,5 @@
+# Dev/test-only dependencies. The app itself (backend/server.py) has zero
+# runtime dependencies on purpose -- these are only needed to lint/test it.
+pytest>=8.0
+pytest-cov>=5.0
+ruff>=0.6

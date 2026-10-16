@@ -1,0 +1,13 @@
+DOMAIN = "hdmi_matrix"
+
+CONF_HOST = "host"
+CONF_USERNAME = "username"
+CONF_PASSWORD = "password"
+
+DEFAULT_USERNAME = "admin"
+DEFAULT_PASSWORD = "admin"
+
+UPDATE_INTERVAL_SECONDS = 5
+
+NUM_INPUTS = 4
+NUM_OUTPUTS = 2

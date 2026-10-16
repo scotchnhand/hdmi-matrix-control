@@ -1,0 +1,12 @@
+{
+  "domain": "hdmi_matrix",
+  "name": "HDMI Matrix",
+  "codeowners": [],
+  "config_flow": true,
+  "documentation": "https://github.com/",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/",
+  "requirements": [],
+  "version": "1.0.0"
+}
