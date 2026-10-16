@@ -18,6 +18,22 @@ these are welcome — see [DEVELOPMENT.md](DEVELOPMENT.md).
       protocol-consistency check between the two `matrix_client.py`
       copies, and weekly CodeQL + Dependabot
 
+### iOS app
+
+- [x] Native SwiftUI client ([`ios-app/`](../ios-app/)) talking to the
+      matrix directly (no backend — native apps aren't subject to CORS),
+      with demo mode, Keychain-stored credentials, and a `MatrixKit`
+      Swift package tested against the same captured device responses
+- [ ] Test against the real device (Local Network permission prompt,
+      `matrix.local` resolution, behaviour after a matrix reboot)
+- [ ] Bonjour discovery of the matrix instead of typing its host
+- [ ] Home Screen widget / Control Center control for one-tap routing
+      presets (App Intents)
+- [x] Liquid Glass redesign (iOS 26+), with a custom app icon in
+      standard / dark / tinted variants
+- [ ] Carry the new routing-diagram icon over to the PWA and HA
+      integration for a consistent look
+
 ## Why this list exists ("continuous improvement" in practice)
 
 The CI pipeline is the enforcement half of continuous improvement
@@ -52,12 +68,6 @@ exactly that.
 - [ ] Auth for the local web app itself (currently anyone on your LAN who
       can reach the proxy can control the matrix — fine for a home
       network, not fine if you'd expose this beyond it)
-- [ ] Native iOS wrapper (thin `WKWebView` shell around the same backend,
-      or a from-scratch SwiftUI client against `/api/*`) — deferred after
-      the web app; a native app talks to the matrix directly with no CORS
-      issue, but needs Xcode, a Local Network permission prompt, and an
-      ATS exception for plain HTTP, for not much daily-use benefit over
-      the PWA
 
 ### Home Assistant integration
 

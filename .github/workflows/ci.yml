@@ -114,3 +114,70 @@ jobs:
           test -f hdmi-matrix-ui/frontend/icons/icon.svg
           test -f hdmi-matrix-ui/frontend/icons/icon-180.png
           test -f hdmi-matrix-ui/frontend/icons/icon-512.png
+
+  ios-unit:
+    name: iOS — MatrixKit unit tests
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "26"
+      - name: Test MatrixKit (protocol client)
+        run: swift test
+        working-directory: ios-app/MatrixKit
+
+  ios-ui:
+    name: iOS — app build + UI tests
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      # The app targets iOS 26 (Liquid Glass), so it needs the Xcode 26 SDK.
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "26"
+      - name: Pick an iPhone simulator
+        id: sim
+        run: |
+          UDID=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          for runtime, items in sorted(devices.items(), reverse=True):
+              if "iOS-26" not in runtime:
+                  continue
+              for d in items:
+                  if d["name"].startswith("iPhone"):
+                      print(d["udid"]); sys.exit()
+          sys.exit("no iOS 26 iPhone simulator available")')
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+          xcrun simctl boot "$UDID"
+      - name: Build and run UI tests (demo matrix)
+        working-directory: ios-app
+        run: |
+          xcodebuild test \
+            -project HDMIMatrix.xcodeproj -scheme HDMIMatrix \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            -resultBundlePath "$RUNNER_TEMP/ui.xcresult" \
+            CODE_SIGNING_ALLOWED=NO
+      - name: Export walkthrough screenshots
+        if: always()
+        run: |
+          if [ -d "$RUNNER_TEMP/ui.xcresult" ]; then
+            xcrun xcresulttool export attachments \
+              --path "$RUNNER_TEMP/ui.xcresult" --output-path "$RUNNER_TEMP/screenshots"
+          fi
+      # Every PR gets a screenshot walkthrough of the app to review.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-ui-screenshots
+          path: ${{ runner.temp }}/screenshots
+          if-no-files-found: ignore
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: ios-ui-xcresult
+          path: ${{ runner.temp }}/ui.xcresult
+          retention-days: 7

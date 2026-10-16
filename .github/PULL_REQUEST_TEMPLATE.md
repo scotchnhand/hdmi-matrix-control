@@ -10,6 +10,7 @@
 
 - [ ] Web app (`hdmi-matrix-ui/`)
 - [ ] Home Assistant integration (`ha-hdmi-matrix/`)
+- [ ] iOS app (`ios-app/`)
 - [ ] Shared protocol (`matrix_client.py` — **check both copies are updated identically**, CI will fail otherwise)
 - [ ] Docs (`docs/`, READMEs)
 - [ ] CI/CD (`.github/`)
@@ -25,5 +26,6 @@
 
 - [ ] `ruff check .` passes
 - [ ] `pytest` passes in any subproject you touched
+- [ ] iOS: `swift test` (MatrixKit) and the UI tests pass; if the UI changed, guide screenshots refreshed with `ios-app/scripts/capture_screenshots.sh`
 - [ ] Updated `docs/ROADMAP.md` if this closes or adds a planned item
 - [ ] Updated the relevant README if user-facing behavior changed
