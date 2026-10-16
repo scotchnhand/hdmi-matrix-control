@@ -21,11 +21,11 @@ Reverse-engineered from the stock web UI (index.html / login.js):
 from __future__ import annotations
 
 import base64
+import http.client
 import json
 import re
 import threading
 import time
-import urllib.error
 import urllib.request
 
 TRAILING_COMMA_RE = re.compile(r",\s*}")
@@ -59,6 +59,10 @@ class MatrixError(Exception):
     """Raised for anything the matrix itself rejected or returned oddly."""
 
 
+class MatrixAuthError(MatrixError):
+    """Raised when the matrix rejects the username/password."""
+
+
 class MatrixClient:
     def __init__(self, host: str, username: str = "admin", password: str = "admin", timeout: float = 4.0):
         self.base = f"http://{host}"
@@ -88,7 +92,10 @@ class MatrixClient:
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:
                 return resp.read().decode("utf-8", errors="replace")
-        except urllib.error.URLError as exc:
+        # URLError covers refused/unresolvable hosts, but a read that times out
+        # (how this device fails when it locks up) raises a bare TimeoutError,
+        # and a dropped connection an http.client error -- treat all as "unreachable".
+        except (OSError, http.client.HTTPException) as exc:
             raise MatrixError(f"Could not reach matrix at {self.base}: {exc}") from exc
 
     @staticmethod
@@ -115,7 +122,7 @@ class MatrixClient:
         text = self._request("POST", "login.set", body)
         data = self._parse_jsonp(text, "settingsLoginCallback")
         if int(data.get("status", 0)) >= 6:
-            raise MatrixError(data.get("str", "Login failed"))
+            raise MatrixAuthError(data.get("str", "Login failed"))
         self._logged_in = True
         return data
 

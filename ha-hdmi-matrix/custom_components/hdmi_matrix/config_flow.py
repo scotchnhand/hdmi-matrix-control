@@ -10,7 +10,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, DEFAULT_PASSWORD, DEFAULT_USERNAME, DOMAIN
-from .matrix_client import MatrixClient, MatrixError
+from .matrix_client import MatrixAuthError, MatrixClient, MatrixError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,9 +30,9 @@ async def _validate(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]
 
     try:
         state = await hass.async_add_executor_job(_try_login)
-    except MatrixError as err:
+    except MatrixAuthError as err:
         raise InvalidAuth from err
-    except Exception as err:  # noqa: BLE001 - surface anything as "cannot connect"
+    except MatrixError as err:
         raise CannotConnect from err
 
     return {"title": f"HDMI Matrix ({state['device'].get('ip', data[CONF_HOST])})"}

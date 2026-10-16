@@ -24,8 +24,14 @@ cd matrix
 
 # Per subproject you're working on:
 cd hdmi-matrix-ui/backend && pip install -r requirements-dev.txt
-cd ../../ha-hdmi-matrix && pip install -r requirements-dev.txt
+cd ../../ha-hdmi-matrix && pip install -r requirements-dev.txt   # Python 3.13+
 ```
+
+The HA integration's dev requirements pull in
+`pytest-homeassistant-custom-component`, which pins Home Assistant itself
+and needs the same Python as current HA (3.13+). Use a separate venv for it
+(`python3.13 -m venv .venv`) — its plugin also blocks sockets, so don't run
+the web app's server tests from that venv.
 
 No runtime dependencies anywhere (`hdmi-matrix-ui/backend` is pure stdlib
 on purpose); `requirements-dev.txt` is test/lint tooling only.
@@ -52,6 +58,10 @@ Tests never touch the real matrix or a real Home Assistant instance:
   and drives it over real HTTP
 - `ha-hdmi-matrix/tests/test_matrix_client.py` — same protocol-layer
   coverage for that copy of the client
+- `ha-hdmi-matrix/tests/test_config_flow.py` / `test_entities.py` — run the
+  integration inside a real in-process Home Assistant (config flow, every
+  entity and command, poll failures) with the client replaced by
+  `FakeMatrixClient` from `tests/conftest.py`
 
 ### iOS app
 

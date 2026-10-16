@@ -1,19 +1,22 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import MatrixCoordinator
 from .entity import MatrixEntity
 
+if TYPE_CHECKING:
+    from . import MatrixConfigEntry
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
-    coordinator: MatrixCoordinator = hass.data[DOMAIN][entry.entry_id]
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: MatrixConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    coordinator = entry.runtime_data
     async_add_entities(
         MatrixOutputPowerSwitch(coordinator, entry.entry_id, output["index"])
         for output in coordinator.data["outputs"]
@@ -24,7 +27,7 @@ class MatrixOutputPowerSwitch(MatrixEntity, SwitchEntity):
     """Power state of one HDMI output."""
 
     _attr_icon = "mdi:television"
-    _attr_device_class = "outlet"
+    _attr_device_class = SwitchDeviceClass.OUTLET
 
     def __init__(self, coordinator: MatrixCoordinator, entry_id: str, output_index: int) -> None:
         super().__init__(coordinator, entry_id)

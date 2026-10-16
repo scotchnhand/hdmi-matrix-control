@@ -1,24 +1,30 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from homeassistant.components.button import ButtonEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import MatrixCoordinator
 from .entity import MatrixEntity
 
+if TYPE_CHECKING:
+    from . import MatrixConfigEntry
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
-    coordinator: MatrixCoordinator = hass.data[DOMAIN][entry.entry_id]
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: MatrixConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    coordinator = entry.runtime_data
     async_add_entities([MatrixRebootButton(coordinator, entry.entry_id)])
 
 
 class MatrixRebootButton(MatrixEntity, ButtonEntity):
     _attr_name = "Reboot"
     _attr_icon = "mdi:restart"
-    _attr_entity_category = "config"
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(self, coordinator: MatrixCoordinator, entry_id: str) -> None:
         super().__init__(coordinator, entry_id)

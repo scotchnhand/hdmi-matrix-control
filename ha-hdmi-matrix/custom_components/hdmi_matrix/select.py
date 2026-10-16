@@ -1,17 +1,26 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Any
+
 from homeassistant.components.select import SelectEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import MatrixCoordinator
 from .entity import MatrixEntity
 
+if TYPE_CHECKING:
+    from . import MatrixConfigEntry
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
-    coordinator: MatrixCoordinator = hass.data[DOMAIN][entry.entry_id]
+AUDIO_OFF = "Off"
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: MatrixConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    coordinator = entry.runtime_data
     entities: list[SelectEntity] = []
 
     for output in coordinator.data["outputs"]:
@@ -20,11 +29,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     for input_ in coordinator.data["inputs"]:
         entities.append(MatrixEdidSelect(coordinator, entry.entry_id, input_["index"]))
 
+    entities.append(MatrixAudioSelect(coordinator, entry.entry_id, "arc", "Audio return (ARC)", "mdi:audio-input-rca"))
+    entities.append(MatrixAudioSelect(coordinator, entry.entry_id, "extraction", "Audio extraction", "mdi:speaker"))
+
     async_add_entities(entities)
 
 
 class MatrixRouteSelect(MatrixEntity, SelectEntity):
-    """Which input is routed to a given output -- the core "crosspoint" control."""
+    """Which input is routed to a given output -- the core "crosspoint" control.
+
+    Deliberately stays available while the output is powered off: the matrix
+    accepts routing changes either way, so automations can pick the source
+    before turning the display on.
+    """
 
     _attr_icon = "mdi:video-switch"
 
@@ -53,14 +70,10 @@ class MatrixRouteSelect(MatrixEntity, SelectEntity):
         matched = next((i for i in self.coordinator.data["inputs"] if i["index"] == output["input_index"]), None)
         return matched["name"] if matched else None
 
-    @property
-    def available(self) -> bool:
-        return super().available and self._output()["power"]
-
     async def async_select_option(self, option: str) -> None:
         target = self._input_by_name(option)
         if target is None:
-            return
+            raise ServiceValidationError(f"Unknown input: {option}")
         await self.coordinator.async_set_route(self._output_index, target["index"])
 
 
@@ -68,7 +81,7 @@ class MatrixEdidSelect(MatrixEntity, SelectEntity):
     """EDID profile advertised to a given input (resolution/channel caps)."""
 
     _attr_icon = "mdi:monitor-dashboard"
-    _attr_entity_category = "config"
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(self, coordinator: MatrixCoordinator, entry_id: str, input_index: int) -> None:
         super().__init__(coordinator, entry_id)
@@ -102,5 +115,57 @@ class MatrixEdidSelect(MatrixEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         preset = self._preset_by_name(option)
         if preset is None:
-            return
+            raise ServiceValidationError(f"Unknown EDID preset: {option}")
         await self.coordinator.async_set_edid(self._input_index, preset["index"])
+
+
+class MatrixAudioSelect(MatrixEntity, SelectEntity):
+    """Which output's audio feeds the ARC / extraction port, or Off.
+
+    The protocol's values are 0=off, 1=Out-A (output 1), 2=Out-B (output 2).
+    Options use the *output* names rather than the routed input's name (as the
+    web app's buttons do) so they only change on a rename, not on every
+    re-route -- automations need stable option strings. The input currently
+    feeding that output is exposed as the `source` attribute instead.
+    """
+
+    def __init__(self, coordinator: MatrixCoordinator, entry_id: str, mode: str, label: str, icon: str) -> None:
+        super().__init__(coordinator, entry_id)
+        self._mode = mode
+        self._attr_name = label
+        self._attr_icon = icon
+        self._attr_unique_id = f"{entry_id}_audio_{mode}"
+
+    def _output(self, index: int) -> dict | None:
+        return next((o for o in self.coordinator.data["outputs"] if o["index"] == index), None)
+
+    @property
+    def options(self) -> list[str]:
+        return [AUDIO_OFF, *(o["name"] for o in self.coordinator.data["outputs"])]
+
+    @property
+    def current_option(self) -> str | None:
+        value = self.coordinator.data["audio"][self._mode]["value"]
+        if value == 0:
+            return AUDIO_OFF
+        output = self._output(value)
+        return output["name"] if output else None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        value = self.coordinator.data["audio"][self._mode]["value"]
+        output = self._output(value)
+        if output is None:
+            return {"source": None}
+        source = next((i for i in self.coordinator.data["inputs"] if i["index"] == output["input_index"]), None)
+        return {"source": source["name"] if source else None}
+
+    async def async_select_option(self, option: str) -> None:
+        if option == AUDIO_OFF:
+            value = 0
+        else:
+            output = next((o for o in self.coordinator.data["outputs"] if o["name"] == option), None)
+            if output is None:
+                raise ServiceValidationError(f"Unknown audio source: {option}")
+            value = output["index"]
+        await self.coordinator.async_set_audio(self._mode, value)
