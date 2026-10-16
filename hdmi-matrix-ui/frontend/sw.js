@@ -1,6 +1,6 @@
 // Caches the static app shell so the PWA opens instantly; /api/* is always
 // fetched live (never cached) since it's the whole point of the app.
-const CACHE_NAME = 'hdmi-matrix-shell-v1';
+const CACHE_NAME = 'hdmi-matrix-shell-v2';
 const SHELL_FILES = [
   '/',
   '/styles.css',

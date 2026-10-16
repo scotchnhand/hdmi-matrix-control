@@ -372,9 +372,20 @@ button {
   cursor: pointer;
   min-height: 44px;
   border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
 }
 
 .segmented button:first-child { border-left: none; }
+
+.segmented__sub {
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.7;
+}
 
 .segmented button[aria-pressed="true"] {
   background: var(--accent);
@@ -465,15 +476,35 @@ button {
   padding: 0 var(--space-5) var(--space-5);
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-4);
 }
 
 .subsection {
+  border-top: 1px solid var(--border);
+}
+
+.subsection__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--space-4);
+  cursor: pointer;
+  list-style: none;
+}
+
+.subsection__summary::-webkit-details-marker { display: none; }
+
+.subsection__summary h3 { margin: 0; }
+
+.subsection[open] > .subsection__summary .icon--chevron {
+  transform: rotate(180deg);
+}
+
+.subsection__body {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--border);
+  padding-top: var(--space-3);
 }
 
 .info-list {
@@ -548,9 +579,50 @@ button {
   border-top: 1px solid var(--danger);
   background: color-mix(in srgb, var(--danger) 10%, transparent);
   margin: 0 calc(var(--space-5) * -1) calc(var(--space-5) * -1);
-  padding: var(--space-4) var(--space-5) var(--space-5);
+  padding: 0 var(--space-5) var(--space-5);
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
+
+.rename-group__title {
+  margin: var(--space-2) 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.rename-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.rename-row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+
+.rename-row label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.rename-row input {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  font-size: 14px;
+  min-height: 44px;
+}
+
+.rename-row .btn { min-height: 44px; }
 
 .danger-row {
   display: flex;
