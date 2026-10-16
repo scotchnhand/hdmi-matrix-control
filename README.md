@@ -1,7 +1,7 @@
 # HDMI Matrix
 
-[![CI](https://github.com/scotchnhand/matrix/actions/workflows/ci.yml/badge.svg)](https://github.com/scotchnhand/matrix/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/scotchnhand/matrix/actions/workflows/codeql.yml/badge.svg)](https://github.com/scotchnhand/matrix/actions/workflows/codeql.yml)
+[![CI](https://github.com/scotchnhand/hdmi-matrix-control/actions/workflows/ci.yml/badge.svg)](https://github.com/scotchnhand/hdmi-matrix-control/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/scotchnhand/hdmi-matrix-control/actions/workflows/codeql.yml/badge.svg)](https://github.com/scotchnhand/hdmi-matrix-control/actions/workflows/codeql.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 A modern control surface for a generic 4-input / 2-output HDMI matrix
