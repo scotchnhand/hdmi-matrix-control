@@ -21,8 +21,8 @@ git clone <this repo>
 cd matrix
 
 # Per subproject you're working on:
-cd hdmi-matrix-ui && pip install -r requirements-dev.txt
-cd ../ha-hdmi-matrix && pip install -r requirements-dev.txt
+cd hdmi-matrix-ui/backend && pip install -r requirements-dev.txt
+cd ../../ha-hdmi-matrix && pip install -r requirements-dev.txt
 ```
 
 No runtime dependencies anywhere (`hdmi-matrix-ui/backend` is pure stdlib

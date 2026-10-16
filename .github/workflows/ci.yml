@@ -34,7 +34,7 @@ jobs:
       matrix:
         project:
           - name: web-app
-            dir: hdmi-matrix-ui
+            dir: hdmi-matrix-ui/backend
           - name: home-assistant-integration
             dir: ha-hdmi-matrix
     defaults:
@@ -87,9 +87,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: home-assistant/actions/hassfest@master
-        with:
-          integration-path: ha-hdmi-matrix/custom_components/hdmi_matrix
+      # The home-assistant/actions/hassfest composite action takes no path
+      # input and expects custom_components/ at the repo root (the usual
+      # single-integration-repo layout). This is a monorepo, so it's run
+      # directly instead, mounted at ha-hdmi-matrix/ (which does have
+      # custom_components/hdmi_matrix/ at its root).
+      - name: Run hassfest
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}/ha-hdmi-matrix:/github/workspace" \
+            ghcr.io/home-assistant/hassfest
 
   frontend-smoke:
     name: Frontend asset sanity
