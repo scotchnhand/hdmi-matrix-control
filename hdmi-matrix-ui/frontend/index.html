@@ -75,53 +75,72 @@
       </button>
       <div class="card__panel" id="advancedPanel" hidden>
 
-        <div class="subsection">
-          <h3>Device</h3>
-          <dl class="info-list" id="deviceInfo">
-            <div><dt>IP address</dt><dd id="infoIp">–</dd></div>
-            <div><dt>Account</dt><dd id="infoAccount">–</dd></div>
-            <div><dt>Firmware</dt><dd id="infoFirmware">–</dd></div>
-          </dl>
-        </div>
-
-        <div class="subsection">
-          <h3>Network</h3>
-          <p class="card__hint">Only change this if you know what you're doing — a wrong value can make the matrix unreachable until you factory-reset it.</p>
-          <form class="form-grid" id="networkForm">
-            <label>IP address<input type="text" id="netIp" inputmode="decimal" placeholder="192.168.1.168" required></label>
-            <label>Subnet mask<input type="text" id="netMask" inputmode="decimal" placeholder="255.255.255.0" required></label>
-            <label>Gateway<input type="text" id="netGw" inputmode="decimal" placeholder="192.168.1.1" required></label>
-            <button type="submit" class="btn btn--primary">Apply network settings</button>
-          </form>
-        </div>
-
-        <div class="subsection">
-          <h3>Change password</h3>
-          <form class="form-grid" id="passwordForm">
-            <label>Username<input type="text" id="pwUser" minlength="5" maxlength="15" required></label>
-            <label>New password<input type="password" id="pwPass1" minlength="5" maxlength="15" required></label>
-            <label>Confirm password<input type="password" id="pwPass2" minlength="5" maxlength="15" required></label>
-            <button type="submit" class="btn btn--primary">Change password</button>
-          </form>
-        </div>
-
-        <div class="subsection subsection--danger">
-          <h3>Danger zone</h3>
-          <div class="danger-row">
-            <div>
-              <strong>Reboot</strong>
-              <p class="card__hint">Restarts the matrix. Takes about 15 seconds.</p>
-            </div>
-            <button type="button" class="btn btn--danger" id="rebootBtn">Reboot</button>
+        <details class="subsection" open>
+          <summary class="subsection__summary"><h3>Device</h3><svg class="icon icon--chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+          <div class="subsection__body">
+            <dl class="info-list" id="deviceInfo">
+              <div><dt>IP address</dt><dd id="infoIp">–</dd></div>
+              <div><dt>Account</dt><dd id="infoAccount">–</dd></div>
+              <div><dt>Firmware</dt><dd id="infoFirmware">–</dd></div>
+            </dl>
           </div>
-          <div class="danger-row">
-            <div>
-              <strong>Factory reset</strong>
-              <p class="card__hint">Erases all routing, names, EDID, and network settings.</p>
-            </div>
-            <button type="button" class="btn btn--danger" id="factoryResetBtn">Factory reset</button>
+        </details>
+
+        <details class="subsection">
+          <summary class="subsection__summary"><h3>Rename ports</h3><svg class="icon icon--chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+          <div class="subsection__body">
+            <p class="card__hint">3–15 letters, numbers, or underscores.</p>
+            <h4 class="rename-group__title">Inputs</h4>
+            <div class="rename-list" id="renameInputsList"></div>
+            <h4 class="rename-group__title">Outputs</h4>
+            <div class="rename-list" id="renameOutputsList"></div>
           </div>
-        </div>
+        </details>
+
+        <details class="subsection">
+          <summary class="subsection__summary"><h3>Network</h3><svg class="icon icon--chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+          <div class="subsection__body">
+            <p class="card__hint">Only change this if you know what you're doing — a wrong value can make the matrix unreachable until you factory-reset it.</p>
+            <form class="form-grid" id="networkForm">
+              <label>IP address<input type="text" id="netIp" inputmode="decimal" placeholder="192.168.1.168" required></label>
+              <label>Subnet mask<input type="text" id="netMask" inputmode="decimal" placeholder="255.255.255.0" required></label>
+              <label>Gateway<input type="text" id="netGw" inputmode="decimal" placeholder="192.168.1.1" required></label>
+              <button type="submit" class="btn btn--primary">Apply network settings</button>
+            </form>
+          </div>
+        </details>
+
+        <details class="subsection">
+          <summary class="subsection__summary"><h3>Change password</h3><svg class="icon icon--chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+          <div class="subsection__body">
+            <form class="form-grid" id="passwordForm">
+              <label>Username<input type="text" id="pwUser" minlength="5" maxlength="15" required></label>
+              <label>New password<input type="password" id="pwPass1" minlength="5" maxlength="15" required></label>
+              <label>Confirm password<input type="password" id="pwPass2" minlength="5" maxlength="15" required></label>
+              <button type="submit" class="btn btn--primary">Change password</button>
+            </form>
+          </div>
+        </details>
+
+        <details class="subsection subsection--danger">
+          <summary class="subsection__summary"><h3>Danger zone</h3><svg class="icon icon--chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+          <div class="subsection__body">
+            <div class="danger-row">
+              <div>
+                <strong>Reboot</strong>
+                <p class="card__hint">Restarts the matrix. Takes about 15 seconds.</p>
+              </div>
+              <button type="button" class="btn btn--danger" id="rebootBtn">Reboot</button>
+            </div>
+            <div class="danger-row">
+              <div>
+                <strong>Factory reset</strong>
+                <p class="card__hint">Erases all routing, names, EDID, and network settings.</p>
+              </div>
+              <button type="button" class="btn btn--danger" id="factoryResetBtn">Factory reset</button>
+            </div>
+          </div>
+        </details>
 
       </div>
     </section>

@@ -12,6 +12,8 @@ const el = {
   infoIp: document.getElementById('infoIp'),
   infoAccount: document.getElementById('infoAccount'),
   infoFirmware: document.getElementById('infoFirmware'),
+  renameInputsList: document.getElementById('renameInputsList'),
+  renameOutputsList: document.getElementById('renameOutputsList'),
   networkForm: document.getElementById('networkForm'),
   netIp: document.getElementById('netIp'),
   netMask: document.getElementById('netMask'),
@@ -132,6 +134,8 @@ function render() {
   renderRouting();
   renderAudio();
   renderInputs();
+  renderRenameList(el.renameInputsList, 'in', 'Input', state.inputs);
+  renderRenameList(el.renameOutputsList, 'out', 'Output', state.outputs);
   renderDeviceInfo();
 }
 
@@ -197,6 +201,20 @@ function renderAudio() {
     const current = state.audio[mode].value;
     for (const btn of group.querySelectorAll('button')) {
       const value = Number(btn.dataset.value);
+      // Out-A / Out-B are Output 1 / Output 2, so label each with whatever
+      // input is currently routed there -- that's the audio you'd actually get.
+      const output = state.outputs.find((o) => o.index === value);
+      if (output) {
+        const input = state.inputs.find((i) => i.index === output.input_index);
+        const wire = value === 1 ? 'Out-A' : 'Out-B';
+        const main = document.createElement('span');
+        main.className = 'segmented__main';
+        main.textContent = input ? input.name : wire;
+        const sub = document.createElement('span');
+        sub.className = 'segmented__sub';
+        sub.textContent = output.power ? `${output.name} · ${wire}` : `${output.name} off · ${wire}`;
+        btn.replaceChildren(main, sub);
+      }
       btn.setAttribute('aria-pressed', String(value === current));
       btn.onclick = () => {
         if (value === current) return;
@@ -249,6 +267,49 @@ function renderDeviceInfo() {
   el.infoAccount.textContent = state.device.account || '–';
   el.infoFirmware.textContent = state.device.firmware || '–';
   if (document.activeElement !== el.netIp && !el.netIp.value) el.netIp.value = state.device.ip || '';
+}
+
+// Rows are built once and then only their values are refreshed, so the 3s
+// poll never clobbers a name the user is in the middle of typing.
+function renderRenameList(container, kind, label, ports) {
+  if (container.children.length !== ports.length) {
+    container.innerHTML = '';
+    for (const port of ports) {
+      const form = document.createElement('form');
+      form.className = 'rename-row';
+      const field = document.createElement('input');
+      field.type = 'text';
+      field.minLength = 3;
+      field.maxLength = 15;
+      field.pattern = '[a-zA-Z0-9_]{3,15}';
+      field.required = true;
+      field.autocomplete = 'off';
+      field.dataset.index = String(port.index);
+      field.addEventListener('input', () => { field.dataset.dirty = '1'; });
+      const lbl = document.createElement('label');
+      lbl.textContent = `${label} ${port.index}`;
+      lbl.append(field);
+      const save = document.createElement('button');
+      save.type = 'submit';
+      save.className = 'btn';
+      save.textContent = 'Save';
+      form.append(lbl, save);
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = field.value.trim();
+        save.disabled = true;
+        sendAction('/api/rename', { kind, index: port.index, name })
+          .then(() => { delete field.dataset.dirty; showToast(`${label} ${port.index} renamed to ${name}`, 'success'); })
+          .catch(() => {})
+          .finally(() => { save.disabled = false; });
+      });
+      container.appendChild(form);
+    }
+  }
+  for (const port of ports) {
+    const field = container.querySelector(`input[data-index="${port.index}"]`);
+    if (field && document.activeElement !== field && !field.dataset.dirty) field.value = port.name;
+  }
 }
 
 // ---------- rename modal ----------
