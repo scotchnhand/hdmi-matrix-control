@@ -59,6 +59,11 @@ class ServerTestCase(unittest.TestCase):
             body = resp.read().decode()
         self.assertIn("<title>HDMI Matrix</title>", body)
 
+    def test_health_endpoint_does_not_touch_matrix(self):
+        status, body = self._get("/healthz")
+        self.assertEqual(status, 200)
+        self.assertEqual(body, {"status": "ok", "service": "hdmi-matrix-ui"})
+
     def test_static_asset_served_with_content_type(self):
         with urllib.request.urlopen(f"{self.base_url}/styles.css", timeout=5) as resp:
             self.assertEqual(resp.status, 200)

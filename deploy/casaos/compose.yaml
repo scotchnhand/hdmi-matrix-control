@@ -1,0 +1,45 @@
+# CasaOS / ZimaOS app template.
+# Replace the image with a registry image, or build the image on the host and
+# set HDMI_MATRIX_IMAGE to the local tag before importing this file.
+x-casaos:
+  architectures:
+    - amd64
+    - arm64
+  main: hdmi-matrix
+  author: HDMI Matrix contributors
+  category: Utilities
+  description:
+    en_us: Local LAN control for a generic 4x2 HDMI matrix switcher.
+  developer: HDMI Matrix contributors
+  icon: https://raw.githubusercontent.com/scotchnhand/hdmi-matrix-control/main/hdmi-matrix-ui/frontend/icons/icon-512.png
+  index: /
+  port_map: "8765"
+  scheme: http
+  store_app_id: hdmi-matrix
+  title:
+    en_us: HDMI Matrix
+
+services:
+  hdmi-matrix:
+    image: ${HDMI_MATRIX_IMAGE:-hdmi-matrix-ui:local}
+    container_name: hdmi-matrix-ui
+    restart: unless-stopped
+    init: true
+    ports:
+      - target: 8765
+        published: ${HDMI_MATRIX_PORT:-8765}
+        protocol: tcp
+    environment:
+      MATRIX_HOST: ${MATRIX_HOST:-matrix.local}
+      MATRIX_USERNAME: ${MATRIX_USERNAME:-admin}
+      MATRIX_PASSWORD: ${MATRIX_PASSWORD:-admin}
+      LISTEN_HOST: 0.0.0.0
+      LISTEN_PORT: 8765
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/healthz', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    security_opt:
+      - no-new-privileges:true

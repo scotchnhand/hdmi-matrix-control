@@ -1,0 +1,25 @@
+# Portainer stack definition.
+# Build hdmi-matrix-ui:local first, or set HDMI_MATRIX_IMAGE to an image
+# available to the Portainer environment (for example, a private registry).
+services:
+  hdmi-matrix:
+    image: ${HDMI_MATRIX_IMAGE:-hdmi-matrix-ui:local}
+    container_name: hdmi-matrix-ui
+    restart: unless-stopped
+    init: true
+    ports:
+      - "${HDMI_MATRIX_PORT:-8765}:8765"
+    environment:
+      MATRIX_HOST: "${MATRIX_HOST:-matrix.local}"
+      MATRIX_USERNAME: "${MATRIX_USERNAME:-admin}"
+      MATRIX_PASSWORD: "${MATRIX_PASSWORD:-admin}"
+      LISTEN_HOST: "0.0.0.0"
+      LISTEN_PORT: "8765"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/healthz', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    security_opt:
+      - no-new-privileges:true

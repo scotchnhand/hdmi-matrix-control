@@ -7,13 +7,14 @@
 A modern control surface for a generic 4-input / 2-output HDMI matrix
 switcher — the kind of cheap, white-label AV-over-HDMI box with a circa-2015
 embedded web UI and no public API documentation. This repo replaces that UI
-with two things, both talking directly to the matrix over your LAN (no
+with three client surfaces, all staying local to your LAN (no
 cloud, no vendor app):
 
 | | |
 |---|---|
 | **[`hdmi-matrix-ui/`](hdmi-matrix-ui/)** | A local web app — zero-dependency Python backend + a dark-mode, high-contrast, installable-as-a-PWA frontend |
 | **[`ha-hdmi-matrix/`](ha-hdmi-matrix/)** | A Home Assistant custom integration — `select`/`switch`/`button`/`sensor` entities for routing, power, and EDID |
+| **[`ios-app/`](ios-app/)** | Shared Swift client and early iOS, macOS, tvOS, and watchOS app targets |
 
 <p align="center">
   <img src="docs/images/web-app-dark.jpg" width="47%" alt="Web app, dark mode" />
@@ -45,6 +46,11 @@ optionally "Add to Home Screen" on your phone. See
 [hdmi-matrix-ui/README.md](hdmi-matrix-ui/README.md) for the mock-mode
 preview (no hardware required) and full config options.
 
+**Permanent Docker host:** copy `.env.example` to `.env`, set the matrix IP
+and credentials, then run `docker compose up -d --build`. The container is
+restartable and includes templates for Portainer, CasaOS, and ZimaOS. See
+[docs/DOCKER.md](docs/DOCKER.md).
+
 **Home Assistant:**
 
 Copy `ha-hdmi-matrix/custom_components/hdmi_matrix/` into your HA config's
@@ -58,10 +64,13 @@ list and why this uses direct IP instead of Matter.
 ```
 hdmi-matrix-ui/        Local web app (backend/ + frontend/), own README
 ha-hdmi-matrix/         Home Assistant integration, own README
+ios-app/                Shared Apple client + native app target sources
 docs/
   PROTOCOL.md           The matrix's reverse-engineered wire protocol
   ROADMAP.md             What's done, planned, and deliberately rejected
   DEVELOPMENT.md          Dev setup, testing, branch/commit conventions
+  DOCKER.md              Permanent Docker, Portainer, CasaOS, and ZimaOS hosting
+  APPLE-PLATFORMS.md     Native Apple platform and WatchConnectivity setup
 .github/
   workflows/              CI (lint + test + coverage), CodeQL, dependabot.yml
   ISSUE_TEMPLATE/          Bug report / feature request forms

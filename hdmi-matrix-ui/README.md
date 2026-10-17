@@ -79,3 +79,8 @@ To have it start on boot (macOS, via `launchd`), or run it on a
 Raspberry Pi / always-on box on your network instead of your laptop, wrap
 the `python3 server.py` command in your OS's usual service manager — the
 server itself needs no special privileges beyond binding its port.
+
+For a Docker host with a persistent restart policy, use the repository's
+`compose.yaml` and see [`docs/DOCKER.md`](../docs/DOCKER.md). The web PWA has a
+dark/light theme toggle that persists locally; the native Apple clients use the
+same local-first appearance model.

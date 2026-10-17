@@ -17,6 +17,10 @@ these are welcome — see [DEVELOPMENT.md](DEVELOPMENT.md).
 - [x] CI: lint, test + coverage, HA manifest validation (`hassfest`), a
       protocol-consistency check between the two `matrix_client.py`
       copies, and weekly CodeQL + Dependabot
+- [x] Permanent Docker deployment with Portainer, CasaOS, and ZimaOS compose
+      templates plus a LAN hosting runbook
+- [x] Shared Apple client foundation with iOS, macOS, tvOS, and watchOS SwiftUI
+      app scaffolds; iOS↔watchOS state/command relay is in place
 
 ## Why this list exists ("continuous improvement" in practice)
 
@@ -52,12 +56,8 @@ exactly that.
 - [ ] Auth for the local web app itself (currently anyone on your LAN who
       can reach the proxy can control the matrix — fine for a home
       network, not fine if you'd expose this beyond it)
-- [ ] Native iOS wrapper (thin `WKWebView` shell around the same backend,
-      or a from-scratch SwiftUI client against `/api/*`) — deferred after
-      the web app; a native app talks to the matrix directly with no CORS
-      issue, but needs Xcode, a Local Network permission prompt, and an
-      ATS exception for plain HTTP, for not much daily-use benefit over
-      the PWA
+- [ ] Native Apple app hardening: signed Xcode project, icons, provisioning,
+      TestFlight builds, and platform-specific polish for iOS/macOS/tvOS/watchOS
 
 ### Home Assistant integration
 

@@ -4,6 +4,10 @@ const POLL_INTERVAL_MS = 3000;
 
 const el = {
   connStatus: document.getElementById('connStatus'),
+  connectionBanner: document.getElementById('connectionBanner'),
+  connectionBannerTitle: document.getElementById('connectionBannerTitle'),
+  connectionBannerDetail: document.getElementById('connectionBannerDetail'),
+  retryBtn: document.getElementById('retryBtn'),
   themeToggle: document.getElementById('themeToggle'),
   routingGrid: document.getElementById('routingGrid'),
   inputList: document.getElementById('inputList'),
@@ -31,6 +35,7 @@ let state = null;
 let busy = false;       // true while a user-initiated request is in flight
 let pollTimer = null;
 let renameTarget = null; // {kind: 'in'|'out', index: number}
+let lastUpdatedAt = null;
 
 // ---------- theme ----------
 
@@ -39,14 +44,34 @@ function initTheme() {
   if (saved === 'light' || saved === 'dark') {
     document.documentElement.setAttribute('data-theme', saved);
   }
+  updateThemeControl();
+}
+
+function effectiveTheme() {
+  return document.documentElement.getAttribute('data-theme')
+    || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+}
+
+function updateThemeControl() {
+  const current = effectiveTheme();
+  const next = current === 'dark' ? 'light' : 'dark';
+  const label = `Use ${next} theme`;
+  el.themeToggle.setAttribute('aria-label', label);
+  el.themeToggle.setAttribute('title', label);
+  el.themeToggle.setAttribute('aria-pressed', String(current === 'dark'));
+  const themeColor = document.getElementById('themeColor');
+  if (themeColor) {
+    const resolvedBackground = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+    if (resolvedBackground) themeColor.setAttribute('content', resolvedBackground);
+  }
 }
 
 function toggleTheme() {
-  const current = document.documentElement.getAttribute('data-theme')
-    || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const current = effectiveTheme();
   const next = current === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
   try { localStorage.setItem('hdmi-matrix-theme', next); } catch (e) { /* private mode, ignore */ }
+  updateThemeControl();
 }
 
 el.themeToggle.addEventListener('click', toggleTheme);
@@ -55,14 +80,19 @@ initTheme();
 // ---------- networking ----------
 
 async function api(path, options) {
-  const res = await fetch(path, options);
-  let body = null;
-  try { body = await res.json(); } catch (e) { /* no body */ }
-  if (!res.ok) {
-    const message = (body && body.error) || `Request failed (${res.status})`;
-    throw new Error(message);
+  try {
+    const res = await fetch(path, options);
+    let body = null;
+    try { body = await res.json(); } catch (e) { /* no body */ }
+    if (!res.ok) {
+      const message = (body && body.error) || `Request failed (${res.status})`;
+      throw new Error(message);
+    }
+    return body;
+  } catch (err) {
+    if (err instanceof TypeError) throw new Error('Control service is unreachable');
+    throw err;
   }
-  return body;
 }
 
 async function fetchState() {
@@ -71,6 +101,7 @@ async function fetchState() {
 
 async function sendAction(path, payload) {
   busy = true;
+  render();
   try {
     const next = await api(path, {
       method: 'POST',
@@ -81,6 +112,7 @@ async function sendAction(path, payload) {
       state = next;
       render();
     }
+    lastUpdatedAt = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(new Date());
     setConnState('ok');
     return next;
   } catch (err) {
@@ -89,6 +121,7 @@ async function sendAction(path, payload) {
     throw err;
   } finally {
     busy = false;
+    render();
   }
 }
 
@@ -96,6 +129,18 @@ function setConnState(mode) {
   el.connStatus.dataset.state = mode;
   const label = el.connStatus.querySelector('.status__label');
   label.textContent = mode === 'ok' ? 'Connected' : mode === 'error' ? 'Connection lost' : 'Connecting…';
+  el.connectionBanner.dataset.state = mode;
+  el.connectionBanner.hidden = mode === 'ok';
+  el.retryBtn.hidden = mode !== 'error';
+  if (mode === 'error') {
+    el.connectionBannerTitle.textContent = 'Control service unavailable';
+    el.connectionBannerDetail.textContent = lastUpdatedAt
+      ? `Showing the last known state from ${lastUpdatedAt}.`
+      : 'Check the host address and try again.';
+  } else if (mode === 'connecting') {
+    el.connectionBannerTitle.textContent = 'Connecting to control service';
+    el.connectionBannerDetail.textContent = 'Loading the latest matrix state…';
+  }
 }
 
 // ---------- toast ----------
@@ -116,6 +161,7 @@ async function poll() {
   try {
     state = await fetchState();
     setConnState('ok');
+    lastUpdatedAt = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(new Date());
     render();
   } catch (err) {
     setConnState('error');
@@ -141,6 +187,7 @@ function render() {
 
 function renderRouting() {
   el.routingGrid.innerHTML = '';
+  el.routingGrid.setAttribute('aria-busy', String(busy));
   for (const output of state.outputs) {
     const card = document.createElement('div');
     card.className = 'route-card';
@@ -165,6 +212,7 @@ function renderRouting() {
     power.className = 'power-switch';
     power.setAttribute('aria-pressed', String(output.power));
     power.setAttribute('aria-label', `${output.name} power ${output.power ? 'on' : 'off'}`);
+    power.disabled = busy;
     power.innerHTML = '<span class="power-switch__knob"></span>';
     power.addEventListener('click', () => {
       sendAction('/api/output-power', { output: output.index, on: !output.power }).catch(() => {});
@@ -181,7 +229,7 @@ function renderRouting() {
       chip.textContent = input.name;
       const active = input.index === output.input_index;
       chip.setAttribute('aria-pressed', String(active));
-      chip.disabled = !output.power;
+      chip.disabled = !output.power || busy;
       chip.title = !output.power ? 'Turn the output on to switch sources' : `Route ${input.name} to ${output.name}`;
       chip.addEventListener('click', () => {
         if (active) return;
@@ -216,6 +264,7 @@ function renderAudio() {
         btn.replaceChildren(main, sub);
       }
       btn.setAttribute('aria-pressed', String(value === current));
+      btn.disabled = busy;
       btn.onclick = () => {
         if (value === current) return;
         sendAction('/api/audio', { mode, value }).catch(() => {});
@@ -244,6 +293,7 @@ function renderInputs() {
 
     const select = document.createElement('select');
     select.setAttribute('aria-label', `EDID preset for ${input.name}`);
+    select.disabled = busy;
     for (const preset of state.edid_presets) {
       const opt = document.createElement('option');
       opt.value = String(preset.index);
@@ -293,6 +343,7 @@ function renderRenameList(container, kind, label, ports) {
       save.type = 'submit';
       save.className = 'btn';
       save.textContent = 'Save';
+      save.disabled = busy;
       form.append(lbl, save);
       form.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -308,7 +359,9 @@ function renderRenameList(container, kind, label, ports) {
   }
   for (const port of ports) {
     const field = container.querySelector(`input[data-index="${port.index}"]`);
+    const save = field?.closest('form')?.querySelector('button[type="submit"]');
     if (field && document.activeElement !== field && !field.dataset.dirty) field.value = port.name;
+    if (save) save.disabled = busy;
   }
 }
 
@@ -317,12 +370,12 @@ function renderRenameList(container, kind, label, ports) {
 function openRename(kind, index, currentName) {
   renameTarget = { kind, index };
   el.renameInput.value = currentName;
-  el.renameModal.hidden = false;
+  el.renameModal.showModal();
   setTimeout(() => el.renameInput.focus(), 0);
 }
 
 function closeRename() {
-  el.renameModal.hidden = true;
+  if (el.renameModal.open) el.renameModal.close();
   renameTarget = null;
 }
 
@@ -345,6 +398,11 @@ el.advancedToggle.addEventListener('click', () => {
   const expanded = el.advancedToggle.getAttribute('aria-expanded') === 'true';
   el.advancedToggle.setAttribute('aria-expanded', String(!expanded));
   el.advancedPanel.hidden = expanded;
+});
+
+el.retryBtn.addEventListener('click', () => {
+  setConnState('connecting');
+  poll();
 });
 
 el.networkForm.addEventListener('submit', (e) => {

@@ -96,6 +96,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = urlparse(self.path).path
+        if path == "/healthz":
+            self._send_json({"status": "ok", "service": "hdmi-matrix-ui"})
+            return
         if path == "/api/state":
             self._handle(lambda: client.get_state())
             return

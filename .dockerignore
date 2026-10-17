@@ -1,0 +1,13 @@
+.git
+.github
+.claude
+.codex
+.venv
+__pycache__
+*.pyc
+ios-app
+ha-hdmi-matrix
+docs
+README.md
+CONTRIBUTING.md
+pyproject.toml
