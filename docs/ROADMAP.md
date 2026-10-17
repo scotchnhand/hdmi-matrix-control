@@ -76,8 +76,9 @@ exactly that.
 
 ### Home Assistant integration
 
-- [ ] HACS listing (`hacs.json` + repo topics) once the integration has
-      been run against a live HA instance
+- [ ] HACS default-store listing (repo topics, brand icon) once the
+      integration has been run against a live HA instance. `hacs.json`
+      already lets it install as a HACS custom repository.
 - [ ] Scene/automation examples in the README (e.g. "Apple TV on → route
       AppleTv to Left")
 
@@ -86,8 +87,10 @@ exactly that.
 - [ ] Enforce a coverage floor (currently reported, not gated — see the
       `test` job in `.github/workflows/ci.yml`) once the suite is mature
       enough that a floor wouldn't just be fighting the tests themselves
-- [ ] Release automation (tag → GitHub Release with changelog) once
-      there's a cadence worth automating
+- [x] Release automation: release-please release PRs, `vX.Y.Z` tags,
+      GitHub Releases with changelog, the HA integration zip and the web
+      app image on GHCR (see docs/DEVELOPMENT.md → Releases)
+- [ ] Bring the iOS app's `MARKETING_VERSION` under release-please
 
 ## Explicitly rejected
 
