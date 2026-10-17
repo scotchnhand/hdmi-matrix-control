@@ -30,6 +30,21 @@ network, `http://<this-machine's-LAN-IP>:8765` — the server prints both
 URLs on startup). On iOS/Android, use the browser's "Add to Home Screen"
 to install it as a standalone app icon.
 
+### Running it with Docker
+
+Each release publishes a multi-arch image (amd64 and arm64) to the GitHub
+Container Registry:
+
+```bash
+docker run -d --name hdmi-matrix-ui -p 8765:8765 \
+  -e MATRIX_HOST=matrix.local -e MATRIX_USERNAME=admin -e MATRIX_PASSWORD=admin \
+  ghcr.io/scotchnhand/hdmi-matrix-control:latest
+```
+
+The environment variables override `config.json`. You can mount a config
+file at `/app/backend/config.json` instead. Pin a release tag such as
+`:1.2.0` rather than `:latest` if you don't want upgrades on pull.
+
 ### Previewing without the hardware
 
 Set `"matrix_host": "mock"` in `config.json` (or `MATRIX_HOST=mock`) to run

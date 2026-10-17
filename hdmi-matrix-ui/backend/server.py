@@ -25,6 +25,7 @@ from urllib.parse import urlparse
 
 from config import load_config
 from matrix_client import MatrixClient, MatrixError
+from version import __version__
 
 FRONTEND_DIR = (Path(__file__).parent.parent / "frontend").resolve()
 
@@ -153,7 +154,7 @@ def main():
     httpd = ThreadingHTTPServer((host, port), Handler)
 
     lan_ip = socket.gethostbyname(socket.gethostname())
-    print("HDMI Matrix UI serving on:")
+    print(f"HDMI Matrix UI {__version__} serving on:")
     print(f"  http://localhost:{port}")
     print(f"  http://{lan_ip}:{port}  (use this from your phone/tablet on the same network)")
     print(f"Proxying to matrix at http://{config['matrix_host']}")
