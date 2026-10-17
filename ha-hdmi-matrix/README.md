@@ -82,10 +82,10 @@ No YAML required — this is a native config-flow integration.
 
 ## Running the tests
 
-Needs Python 3.13+ (current Home Assistant's minimum):
+Needs Python 3.14.2+ (current Home Assistant's minimum):
 
 ```bash
 cd ha-hdmi-matrix
-python3.13 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
+python3.14 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
 .venv/bin/python -m pytest tests -v
 ```

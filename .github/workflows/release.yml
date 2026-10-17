@@ -34,6 +34,9 @@ jobs:
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+          # Without this, release-please reads its config from, and opens
+          # the release PR against, the repo's default branch, which is dev.
+          target-branch: main
 
   ha-integration:
     name: Package HA integration
