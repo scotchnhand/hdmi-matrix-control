@@ -23,7 +23,7 @@ The web app and Home Assistant integration have separate copies of `matrix_clien
 
 ## Commits and Pull Requests
 
-Use Conventional Commits, such as `fix(web-app): handle failed routing request` or `docs(protocol): clarify polling response`. Branch from `main` with a descriptive prefix such as `fix/` or `feat/`. Open changes as a PR against `main`, explain the behavior and rationale, and list the checks you ran. Include screenshots for visible iOS or web UI changes; update `docs/ROADMAP.md` when changing planned work. CI must pass before merge.
+Use Conventional Commits, such as `fix(web-app): handle failed routing request` or `docs(protocol): clarify polling response`. `dev` is the development branch: branch from `dev` with a descriptive prefix such as `fix/` or `feat/`, and open changes as a PR against `dev`. `main` only receives release merges from `dev`. In the PR, explain the behavior and rationale, and list the checks you ran. Include screenshots for visible iOS or web UI changes; update `docs/ROADMAP.md` when changing planned work. CI must pass before merge.
 
 ## Configuration and Hardware
 
