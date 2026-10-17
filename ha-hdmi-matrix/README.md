@@ -46,9 +46,16 @@ cadence the matrix's own UI uses.
 
 ## Installation
 
-1. Copy `custom_components/hdmi_matrix/` into your Home Assistant config
-   directory's `custom_components/` folder (so you end up with
-   `config/custom_components/hdmi_matrix/...`).
+1. Install the integration files, either way:
+   - **HACS:** add `https://github.com/scotchnhand/hdmi-matrix-control` as
+     a custom repository (category *Integration*), then install
+     "HDMI Matrix". HACS downloads `hdmi_matrix.zip` from the latest
+     GitHub Release.
+   - **Manually:** download `hdmi_matrix.zip` from the
+     [latest release](https://github.com/scotchnhand/hdmi-matrix-control/releases/latest)
+     and unzip it into `config/custom_components/hdmi_matrix/`. Or copy
+     `custom_components/hdmi_matrix/` from this repo into your config
+     directory's `custom_components/` folder.
 2. Restart Home Assistant.
 3. Settings → Devices & Services → Add Integration → search "HDMI
    Matrix".

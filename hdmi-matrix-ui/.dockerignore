@@ -1,0 +1,8 @@
+backend/config.json
+backend/tests/
+backend/requirements-dev.txt
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+README.md
+Dockerfile
