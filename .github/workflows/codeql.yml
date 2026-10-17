@@ -2,9 +2,9 @@ name: CodeQL
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
   schedule:
     # Weekly scan catches newly-disclosed vulnerability patterns even on a
     # repo with no code changes that week -- continuous improvement without
