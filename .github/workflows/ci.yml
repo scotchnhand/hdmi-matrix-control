@@ -86,6 +86,55 @@ jobs:
           fi
           echo "In sync."
 
+  version-consistency:
+    name: Version files agree
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # release-please bumps all of these together; a hand edit to just one
+      # would ship mismatched versions.
+      - name: Compare version files
+        run: |
+          python3 - <<'PY'
+          import json, re, sys
+          versions = {
+              ".release-please-manifest.json": json.load(open(".release-please-manifest.json"))["."],
+              "version.txt": open("version.txt").read().strip(),
+              "ha manifest.json": json.load(open("ha-hdmi-matrix/custom_components/hdmi_matrix/manifest.json"))["version"],
+              "web-app version.py": re.search(
+                  r'__version__ = "([^"]+)"', open("hdmi-matrix-ui/backend/version.py").read()
+              ).group(1),
+          }
+          for name, version in versions.items():
+              print(f"{name}: {version}")
+          if len(set(versions.values())) != 1:
+              print("::error::Version files disagree. Let release-please bump versions instead of editing them by hand.")
+              sys.exit(1)
+          PY
+
+  docker-build:
+    name: Web app image builds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v3
+      - name: Build (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: hdmi-matrix-ui
+          push: false
+          load: true
+          tags: hdmi-matrix-ui:ci
+      - name: Smoke test against the demo matrix
+        run: |
+          docker run -d --name ui -e MATRIX_HOST=mock -p 8765:8765 hdmi-matrix-ui:ci
+          for i in $(seq 1 20); do
+            curl -fsS http://localhost:8765/api/state && exit 0
+            sleep 1
+          done
+          docker logs ui
+          exit 1
+
   hassfest:
     name: Validate HA manifest (hassfest)
     runs-on: ubuntu-latest

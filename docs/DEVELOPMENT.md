@@ -144,6 +144,40 @@ docs(protocol): document the audio_set dec= field name mismatch
 Keep the summary line imperative and under ~72 characters; put the "why"
 in the body if it's not obvious from the summary alone.
 
+## Releases
+
+The repo has a single version shared by the HA integration and the web
+app. It lives in `.release-please-manifest.json`, `version.txt`, the HA
+`manifest.json` and `hdmi-matrix-ui/backend/version.py`, and CI's
+`version-consistency` job fails if they disagree. Don't edit these files
+by hand.
+
+[release-please](https://github.com/googleapis/release-please) runs from
+`.github/workflows/release.yml` on every push to `main`:
+
+1. Merge `dev` into `main` when it's ready to ship.
+2. release-please opens (or updates) a **release PR** against `main`. The
+   PR bumps the version from the Conventional Commits since the last
+   release (`fix:` → patch, `feat:` → minor, `feat!:` or a
+   `BREAKING CHANGE:` footer → major) and updates `CHANGELOG.md`.
+3. Merge the release PR. That tags `vX.Y.Z`, publishes the GitHub
+   Release, and then:
+   - attaches `hdmi_matrix.zip`, which HACS installs from via `hacs.json`;
+   - pushes `ghcr.io/scotchnhand/hdmi-matrix-control` tagged `X.Y.Z`,
+     `X.Y` and `latest`, for amd64 and arm64;
+   - opens a `main` → `dev` PR that brings the release commit back. Merge
+     it with a merge commit, not a squash.
+
+Because squash merges use the PR title as the commit message, PR titles
+need to follow Conventional Commits too. Only those commit messages
+decide the next version.
+
+The release PR is opened with the workflow's `GITHUB_TOKEN`, so CI
+doesn't run on it automatically. That's fine for a version-only change;
+use "Re-run" or push an empty commit if you want checks on it.
+
+The iOS app's `MARKETING_VERSION` isn't managed by release-please yet.
+
 ## Filing bugs / feature requests
 
 Use the issue templates (Issues → New Issue) — they ask for the one or
