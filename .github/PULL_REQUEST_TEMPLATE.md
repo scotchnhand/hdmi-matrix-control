@@ -2,6 +2,12 @@
 
 <!-- One or two sentences. Link any related issue: "Closes #123". -->
 
+## Target branch
+
+- [ ] Normal work targets `dev`
+- [ ] This is a release PR from `dev` to `main`
+- [ ] This is an urgent `hotfix/*` PR to `main`
+
 ## Why?
 
 <!-- The motivation -- what was broken, missing, or annoying before this. -->
@@ -13,6 +19,7 @@
 - [ ] Shared protocol (`matrix_client.py` — **check both copies are updated identically**, CI will fail otherwise)
 - [ ] Docs (`docs/`, READMEs)
 - [ ] CI/CD (`.github/`)
+- [ ] Apple clients (`ios-app/`)
 
 ## How was this tested?
 
@@ -27,3 +34,5 @@
 - [ ] `pytest` passes in any subproject you touched
 - [ ] Updated `docs/ROADMAP.md` if this closes or adds a planned item
 - [ ] Updated the relevant README if user-facing behavior changed
+- [ ] Confirmed this PR follows the branch flow in
+      [docs/BRANCHING-AND-PROTECTION.md](../docs/BRANCHING-AND-PROTECTION.md)

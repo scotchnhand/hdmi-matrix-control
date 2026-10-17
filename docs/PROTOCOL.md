@@ -13,7 +13,7 @@ the two copies).
 - **State reads** are `GET /<page>.get<unix-ms-timestamp>` and return a
   JSONP-style blob, e.g.:
 
-  ```
+  ```text
   VideoCallback({"o1":"2",    "o2":"2",    "s1":"1",    "s2":"1",
   "group":"0",    "account":"admin",    "ip":"192.168.17.238",
   "port":"001011",    "in1":"Windows",   "in2":"MacBook",
@@ -61,7 +61,7 @@ the two copies).
 Index → description (fixed firmware list, not returned dynamically by the
 device — see `EDID_PRESETS` in `matrix_client.py`):
 
-```
+```text
 00 Mixer              04 1080P 8CH          08 4K 444 2CH         12 4K HDR 10Bit 6CH
 01 1920x1200 2CH      05 4K 420 2CH         09 4K 444 6CH         13 4K HDR 10Bit 8CH
 02 1080P 2CH          06 4K 420 6CH         10 4K 444 8CH         14 Copy Out-A

@@ -61,7 +61,7 @@ minimize this.
 
 ## Project layout
 
-```
+```text
 backend/
   server.py          stdlib HTTP server: serves frontend/, proxies /api/*
   matrix_client.py    the reverse-engineered matrix protocol

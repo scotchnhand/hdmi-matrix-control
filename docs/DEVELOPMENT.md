@@ -2,11 +2,11 @@
 
 ## Repo layout
 
-```
+```text
 hdmi-matrix-ui/      Local web app (Python stdlib backend + PWA frontend)
 ha-hdmi-matrix/       Home Assistant custom integration
 docs/                 This file, PROTOCOL.md, ROADMAP.md
-.github/              CI workflows, issue/PR templates, Dependabot config
+.github/              CI workflows, branch policy, CODEOWNERS, issue/PR templates
 pyproject.toml        Shared ruff config (repo-wide)
 ```
 
@@ -38,6 +38,9 @@ pytest tests/ --cov=. --cov-report=term-missing   # with coverage
 # Lint (whole repo, from the root):
 ruff check .
 ruff check --fix .   # auto-fix what's fixable
+
+# Markdown lint (from the root):
+npx --yes markdownlint-cli2 --config .markdownlint-cli2.jsonc '**/*.md'
 ```
 
 Tests never touch the real matrix or a real Home Assistant instance:
@@ -57,8 +60,9 @@ under rapid requests, and a power cycle is the recovery.
 
 ## Making a change
 
-1. Branch off `main`: `git checkout -b <type>/<short-description>` (e.g.
-   `fix/edid-select-reverts-on-error`, `feat/multi-matrix-support`).
+1. Branch off `dev`: `git checkout -b <type>/<short-description>` (e.g.
+   `feature/multi-matrix-support`, `fix/edid-select-reverts-on-error`). Use
+   `hotfix/<short-description>` from `main` only for urgent production fixes.
 2. If you touch `matrix_client.py`, **update both copies**
    (`hdmi-matrix-ui/backend/` and
    `ha-hdmi-matrix/custom_components/hdmi_matrix/`) — CI's
@@ -70,14 +74,18 @@ under rapid requests, and a power cycle is the recovery.
    touched.
 5. If this closes or adds a planned item, update
    [ROADMAP.md](ROADMAP.md) in the same PR.
-6. Open a PR against `main` — the template will prompt for what changed,
-   why, and how it was tested.
+6. Open a PR against `dev` — the template will prompt for what changed, why,
+   and how it was tested. A release PR promotes `dev` to `main` after the
+   integration line is ready.
+
+See [BRANCHING-AND-PROTECTION.md](BRANCHING-AND-PROTECTION.md) for the full
+branch contract and the GitHub administrator checklist.
 
 ## Commit messages
 
 [Conventional Commits](https://www.conventionalcommits.org/):
 
-```
+```text
 <type>(<scope>): <short summary>
 
 <body, if the summary needs more context>
@@ -88,7 +96,7 @@ under rapid requests, and a power cycle is the recovery.
 
 Examples:
 
-```
+```text
 fix(web-app): revert EDID select on failed request
 
 feat(ha-integration): add reboot button entity

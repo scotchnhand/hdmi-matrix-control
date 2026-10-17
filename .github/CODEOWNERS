@@ -1,0 +1,10 @@
+# Human ownership is intentionally separate from the coding tool or agent.
+# Replace this account with an organization team if the project grows.
+* @scotchnhand
+
+# Deployment and repository policy deserve explicit review.
+/Dockerfile @scotchnhand
+/compose.yaml @scotchnhand
+/deploy/ @scotchnhand
+/.github/ @scotchnhand
+/docs/BRANCHING-AND-PROTECTION.md @scotchnhand

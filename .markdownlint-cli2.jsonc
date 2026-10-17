@@ -1,0 +1,16 @@
+{
+  "ignores": [
+    "**/.claude/**",
+    "**/.venv/**",
+    "**/node_modules/**",
+    "**/build/**",
+    "**/dist/**"
+  ],
+  "config": {
+    "default": true,
+    "MD013": false,
+    "MD033": false,
+    "MD041": false,
+    "MD060": false
+  }
+}

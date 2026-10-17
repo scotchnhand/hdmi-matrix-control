@@ -1,0 +1,45 @@
+name: Branch policy
+
+on:
+  pull_request:
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+jobs:
+  branch-routing:
+    name: Branch routing
+    runs-on: ubuntu-latest
+    env:
+      BASE_REF: ${{ github.base_ref }}
+      HEAD_REF: ${{ github.head_ref }}
+    steps:
+      - name: Enforce the integration flow
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          case "$BASE_REF" in
+            dev)
+              if [[ "$HEAD_REF" == "main" || "$HEAD_REF" == "dev" ]]; then
+                echo "::error::A protected branch cannot be the head of a PR into dev."
+                exit 1
+              fi
+              ;;
+            main)
+              case "$HEAD_REF" in
+                dev|release/*|hotfix/*) ;;
+                *)
+                  echo "::error::PRs into main must come from dev, release/*, or hotfix/*."
+                  exit 1
+                  ;;
+              esac
+              ;;
+            *)
+              echo "::error::Unsupported protected target: $BASE_REF"
+              exit 1
+              ;;
+          esac
+
+          echo "Branch routing is valid: $HEAD_REF -> $BASE_REF"

@@ -61,7 +61,7 @@ list and why this uses direct IP instead of Matter.
 
 ## Repo structure
 
-```
+```text
 hdmi-matrix-ui/        Local web app (backend/ + frontend/), own README
 ha-hdmi-matrix/         Home Assistant integration, own README
 ios-app/                Shared Apple client + native app target sources
@@ -69,10 +69,12 @@ docs/
   PROTOCOL.md           The matrix's reverse-engineered wire protocol
   ROADMAP.md             What's done, planned, and deliberately rejected
   DEVELOPMENT.md          Dev setup, testing, branch/commit conventions
+  BRANCHING-AND-PROTECTION.md  Agent-neutral work lanes and GitHub rules
   DOCKER.md              Permanent Docker, Portainer, CasaOS, and ZimaOS hosting
   APPLE-PLATFORMS.md     Native Apple platform and WatchConnectivity setup
 .github/
-  workflows/              CI (lint + test + coverage), CodeQL, dependabot.yml
+  workflows/              CI (lint + tests + Markdown), branch policy, CodeQL
+  CODEOWNERS               Human ownership for protected-path review
   ISSUE_TEMPLATE/          Bug report / feature request forms
   PULL_REQUEST_TEMPLATE.md
 CONTRIBUTING.md
@@ -89,7 +91,9 @@ manifest validation, weekly CodeQL scanning, and Dependabot. See
 locally, and **[CONTRIBUTING.md](CONTRIBUTING.md)** / the issue templates
 for filing bugs and feature requests. **[docs/ROADMAP.md](docs/ROADMAP.md)**
 tracks what's planned next (and why a few things, like Matter support,
-were deliberately ruled out).
+were deliberately ruled out). Normal work targets protected `dev`; releases
+promote `dev` to protected `main`. See
+[docs/BRANCHING-AND-PROTECTION.md](docs/BRANCHING-AND-PROTECTION.md).
 
 ## A hardware note
 

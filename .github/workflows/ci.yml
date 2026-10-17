@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
   workflow_dispatch: {}
 
 permissions:
@@ -114,3 +114,17 @@ jobs:
           test -f hdmi-matrix-ui/frontend/icons/icon.svg
           test -f hdmi-matrix-ui/frontend/icons/icon-180.png
           test -f hdmi-matrix-ui/frontend/icons/icon-512.png
+
+  required-checks:
+    if: ${{ always() }}
+    name: Required checks
+    needs: [lint, test, protocol-consistency, hassfest, frontend-smoke]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail when an implementation check fails
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        run: |
+          echo "One or more required CI jobs failed or were cancelled."
+          exit 1
+      - name: Confirm required CI checks passed
+        run: echo "All required CI checks passed."
