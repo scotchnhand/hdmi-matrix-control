@@ -22,6 +22,11 @@ these are welcome — see [DEVELOPMENT.md](DEVELOPMENT.md).
 - [x] CI: lint, test + coverage, HA manifest validation (`hassfest`), a
       protocol-consistency check between the two `matrix_client.py`
       copies, and weekly CodeQL + Dependabot
+- [x] Publish the web app as a multi-architecture GHCR image for
+      `linux/amd64` and `linux/arm64`, using a non-root container and
+      release automation
+- [x] Establish `dev` as the development branch and `main` as the release
+      branch, with release-please and main-to-dev synchronization
 
 ### iOS app
 
@@ -34,10 +39,45 @@ these are welcome — see [DEVELOPMENT.md](DEVELOPMENT.md).
 - [ ] Bonjour discovery of the matrix instead of typing its host
 - [ ] Home Screen widget / Control Center control for one-tap routing
       presets (App Intents)
-- [x] Liquid Glass redesign (iOS 26+), with a custom app icon in
-      standard / dark / tinted variants
+- [x] Dark appearance and Liquid Glass redesign (iOS 26+), with a custom
+      app icon in standard / dark / tinted variants
+- [x] Shared `MatrixKit` package support for macOS 14+ protocol testing
 - [ ] Carry the new routing-diagram icon over to the PWA and HA
       integration for a consistent look
+
+### macOS app
+
+- [ ] Add a native SwiftUI macOS application target using the shared
+      `MatrixKit` package
+- [ ] Refactor UIKit-only theme and input code into cross-platform SwiftUI
+      implementations
+- [ ] Preserve Liquid Glass on supported macOS releases with a standard
+      material fallback on older supported systems
+- [ ] Build and validate a Universal 2 release containing both `arm64` and
+      `x86_64` slices
+- [ ] Add macOS CI, archive, signing, notarization, and installer packaging
+- [ ] Add Mac-specific UI tests for routing, connection setup, and destructive
+      actions
+
+### tvOS and watchOS apps
+
+- [ ] Add a native tvOS target for living-room routing and source selection
+- [ ] Add a watchOS companion target for quick status and favorite routes
+- [ ] Add iPhone/watch connectivity, reachability, and handoff behavior
+- [ ] Validate the Apple platform targets against a live matrix and offline
+      demo mode
+
+### Local Docker hosting
+
+- [x] Publish a multi-architecture web app image for `linux/amd64` and
+      `linux/arm64` to GHCR
+- [ ] Add a permanent-host Docker Compose stack with persistent configuration,
+      restart policy, health checks, and documented LAN binding
+- [ ] Add complete Portainer stack documentation, including environment
+      variables, updates, logs, rollback, and backup guidance
+- [ ] Validate the same Compose deployment flow on CasaOS and ZimaOS
+- [ ] Document the security boundary for LAN-only operation and any reverse
+      proxy or authentication requirements before internet exposure
 
 ## Why this list exists ("continuous improvement" in practice)
 
@@ -69,6 +109,10 @@ exactly that.
 
 ### Web app
 
+- [x] User-selectable light/dark theme with system preference detection and
+      persisted preference
+- [ ] Refine the dashboard with Apple-inspired layered materials and subtle
+      Liquid Glass-like surfaces while keeping controls accessible and calm
 - [ ] Multi-matrix support (control more than one unit from one instance)
 - [ ] Auth for the local web app itself (currently anyone on your LAN who
       can reach the proxy can control the matrix — fine for a home
@@ -84,6 +128,12 @@ exactly that.
 
 ### CI/CD
 
+- [x] Define an agent-agnostic repository contract in `AGENTS.md`, including
+      branch, testing, documentation, and pull-request expectations
+- [ ] Apply GitHub protection rulesets to both `main` and `dev`, requiring
+      pull requests, passing CI, and no direct pushes
+- [ ] Add repository-wide GitHub-flavored Markdown linting and make it a
+      required pull-request check
 - [ ] Enforce a coverage floor (currently reported, not gated — see the
       `test` job in `.github/workflows/ci.yml`) once the suite is mature
       enough that a floor wouldn't just be fighting the tests themselves

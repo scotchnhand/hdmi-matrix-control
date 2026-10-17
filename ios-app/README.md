@@ -1,14 +1,27 @@
-# HDMI Matrix for iOS
+# HDMI Matrix Apple clients
 
 A native SwiftUI client for the 4x2 HDMI matrix. Unlike the web app, it
 needs **no backend**: a native app isn't subject to CORS, so it talks the
 matrix's own protocol ([docs/PROTOCOL.md](../docs/PROTOCOL.md)) straight
 over your LAN.
 
+## Platform status
+
+- **iOS / iPadOS:** the current SwiftUI application target, using iOS 26 and
+  Liquid Glass.
+- **macOS:** not yet an application target. The shared `MatrixKit` package
+  supports macOS 14+ and is testable on a Mac, but the current Xcode project
+  does not build a Mac `.app`.
+- **Intel and Apple silicon:** the planned Mac app will be a Universal 2
+  binary containing `x86_64` and `arm64`. This is not implemented yet.
+
+See [Apple platform status](../docs/APPLE-PLATFORMS.md) for the build plan,
+architecture checks, and current validation boundaries.
+
 ## Layout
 
 ```
-MatrixKit/                Swift package: protocol client, models, mock
+MatrixKit/                Cross-platform Swift package: protocol client, models, mock
   Sources/MatrixKit/
     MatrixClient.swift     Swift port of matrix_client.py (serialized requests)
     MockMatrixClient.swift Swift port of mock_client.py (demo mode, previews)
@@ -16,7 +29,7 @@ MatrixKit/                Swift package: protocol client, models, mock
     MatrixState.swift      Normalized state + validation rules
   Tests/MatrixKitTests/    Tests against the same captured device responses
                            as the Python suites
-HDMIMatrix/               The app (SwiftUI, iOS 26+, Liquid Glass)
+HDMIMatrix/               Current iOS app (SwiftUI, iOS 26+, Liquid Glass)
 HDMIMatrix.xcodeproj
 Info.plist                ATS exception for plain HTTP on the local network
 scripts/generate_icons.swift
@@ -60,7 +73,7 @@ EDID, and troubleshooting.
 ## Tests
 
 The protocol layer is a plain Swift package, so it tests on macOS with no
-simulator:
+simulator. This validates the shared client only, not a macOS application:
 
 ```bash
 cd ios-app/MatrixKit && swift test

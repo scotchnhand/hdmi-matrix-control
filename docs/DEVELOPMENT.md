@@ -89,6 +89,20 @@ If you're testing against the **real hardware**, read the "known hardware
 quirk" note in [docs/PROTOCOL.md](PROTOCOL.md) first — it can lock up
 under rapid requests, and a power cycle is the recovery.
 
+### macOS app status
+
+The shared `ios-app/MatrixKit` package supports macOS 14+ and its unit tests
+run on macOS without a simulator. The application target in
+`ios-app/HDMIMatrix.xcodeproj` is currently iOS-only: there is no macOS app
+target, Mac archive, installer, or universal binary yet.
+
+The planned Mac client will be a Universal 2 build containing `arm64` and
+`x86_64`, with a macOS 14+ deployment baseline and an availability-gated
+Liquid Glass enhancement. The existing `ios-unit` CI job is evidence for the
+shared protocol package only; the existing `ios-ui` job is evidence for iOS,
+not macOS. See [APPLE-PLATFORMS.md](APPLE-PLATFORMS.md) for the full plan and
+the acceptance command to add once the target exists.
+
 ## Branches
 
 - **`dev`** is the development branch and the repo's default. Every

@@ -7,14 +7,14 @@
 A modern control surface for a generic 4-input / 2-output HDMI matrix
 switcher — the kind of cheap, white-label AV-over-HDMI box with a circa-2015
 embedded web UI and no public API documentation. This repo replaces that UI
-with two things, both talking directly to the matrix over your LAN (no
+with three client surfaces, all talking directly to the matrix over your LAN (no
 cloud, no vendor app):
 
 | | |
 |---|---|
 | **[`hdmi-matrix-ui/`](hdmi-matrix-ui/)** | A local web app — zero-dependency Python backend + a dark-mode, high-contrast, installable-as-a-PWA frontend |
 | **[`ha-hdmi-matrix/`](ha-hdmi-matrix/)** | A Home Assistant custom integration — `select`/`switch`/`button`/`sensor` entities for routing, power, and EDID |
-| **[`ios-app/`](ios-app/)** | A native SwiftUI iPhone/iPad app (iOS 26, Liquid Glass) that talks to the matrix directly — no backend needed. [User guide](docs/ios-guide/README.md) |
+| **[`ios-app/`](ios-app/)** | A native SwiftUI iPhone/iPad app (iOS 26, Liquid Glass) that talks to the matrix directly — no backend needed. A macOS client is planned on the same `MatrixKit` foundation. [User guide](docs/ios-guide/README.md) |
 
 <p align="center">
   <img src="docs/images/web-app-dark.jpg" width="47%" alt="Web app, dark mode" />
@@ -65,6 +65,7 @@ docs/
   PROTOCOL.md           The matrix's reverse-engineered wire protocol
   ROADMAP.md             What's done, planned, and deliberately rejected
   DEVELOPMENT.md          Dev setup, testing, branch/commit conventions
+  APPLE-PLATFORMS.md      Apple platform status and Universal 2 Mac plan
 .github/
   workflows/              CI (lint + test + coverage), CodeQL, dependabot.yml
   ISSUE_TEMPLATE/          Bug report / feature request forms
@@ -83,7 +84,9 @@ manifest validation, weekly CodeQL scanning, and Dependabot. See
 locally, and **[CONTRIBUTING.md](CONTRIBUTING.md)** / the issue templates
 for filing bugs and feature requests. **[docs/ROADMAP.md](docs/ROADMAP.md)**
 tracks what's planned next (and why a few things, like Matter support,
-were deliberately ruled out).
+were deliberately ruled out). The current Apple-platform status and the
+Intel/Apple-silicon Mac plan are documented in
+[docs/APPLE-PLATFORMS.md](docs/APPLE-PLATFORMS.md).
 
 ## A hardware note
 
