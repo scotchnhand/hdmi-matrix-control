@@ -48,8 +48,9 @@ preview (no hardware required) and full config options.
 
 **Home Assistant:**
 
-Copy `ha-hdmi-matrix/custom_components/hdmi_matrix/` into your HA config's
-`custom_components/`, restart HA, then Settings → Devices & Services → Add
+Install through HACS as a custom repository, or unzip `hdmi_matrix.zip`
+from the [latest release](https://github.com/scotchnhand/hdmi-matrix-control/releases/latest)
+into your HA config's `custom_components/hdmi_matrix/`. Restart HA, then Settings → Devices & Services → Add
 Integration → "HDMI Matrix". See
 [ha-hdmi-matrix/README.md](ha-hdmi-matrix/README.md) for the full entity
 list and why this uses direct IP instead of Matter.

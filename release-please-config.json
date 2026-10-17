@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "simple",
+  "include-component-in-tag": false,
+  "include-v-in-tag": true,
+  "bootstrap-sha": "6d3bbc09bc34aadb7d5f2473f5d24cb1b99ea86f",
+  "packages": {
+    ".": {
+      "package-name": "hdmi-matrix-control",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "ha-hdmi-matrix/custom_components/hdmi_matrix/manifest.json",
+          "jsonpath": "$.version"
+        },
+        "hdmi-matrix-ui/backend/version.py"
+      ]
+    }
+  }
+}
