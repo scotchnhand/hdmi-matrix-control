@@ -37,10 +37,10 @@ jobs:
             dir: hdmi-matrix-ui/backend
             python: "3.12"
           # pytest-homeassistant-custom-component runs a real in-process
-          # Home Assistant, which needs current HA's Python.
+          # Home Assistant. The pinned release currently requires Python 3.14+.
           - name: home-assistant-integration
             dir: ha-hdmi-matrix
-            python: "3.13"
+            python: "3.14"
     defaults:
       run:
         working-directory: ${{ matrix.project.dir }}
