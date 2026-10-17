@@ -10,7 +10,8 @@ Thanks for looking at this. Short version:
    already be a planned item (or a deliberately-rejected one, with the
    reasoning written down).
 
-All changes go through a PR against `main`; CI (lint, tests, HA manifest
+All changes go through a PR against `dev`, the development branch (`main`
+only moves when `dev` is merged into it for a release); CI (lint, tests, HA manifest
 validation, a check that the two copies of the shared protocol client
 haven't diverged) has to pass. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
 for details.

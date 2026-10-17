@@ -89,9 +89,20 @@ If you're testing against the **real hardware**, read the "known hardware
 quirk" note in [docs/PROTOCOL.md](PROTOCOL.md) first — it can lock up
 under rapid requests, and a power cycle is the recovery.
 
+## Branches
+
+- **`dev`** is the development branch and the repo's default. Every
+  feature or fix branches from it and comes back to it through a PR.
+- **`main`** is the release branch. It only moves when `dev` is merged
+  into it, and release automation runs from there.
+
+CI runs on pushes and PRs to both branches. Dependabot opens its PRs
+against `dev`.
+
 ## Making a change
 
-1. Branch off `main`: `git checkout -b <type>/<short-description>` (e.g.
+1. Branch off `dev`, the development branch:
+   `git checkout dev && git pull && git checkout -b <type>/<short-description>` (e.g.
    `fix/edid-select-reverts-on-error`, `feat/multi-matrix-support`).
 2. If you touch `matrix_client.py`, **update both copies**
    (`hdmi-matrix-ui/backend/` and
@@ -104,7 +115,7 @@ under rapid requests, and a power cycle is the recovery.
    touched; for `ios-app/`, `swift test` and the UI tests (see above).
 5. If this closes or adds a planned item, update
    [ROADMAP.md](ROADMAP.md) in the same PR.
-6. Open a PR against `main` — the template will prompt for what changed,
+6. Open a PR against `dev` — the template will prompt for what changed,
    why, and how it was tested.
 
 ## Commit messages
