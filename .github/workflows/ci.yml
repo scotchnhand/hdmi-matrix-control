@@ -40,7 +40,7 @@ jobs:
           # Home Assistant, which needs current HA's Python.
           - name: home-assistant-integration
             dir: ha-hdmi-matrix
-            python: "3.13"
+            python: "3.14"
     defaults:
       run:
         working-directory: ${{ matrix.project.dir }}
