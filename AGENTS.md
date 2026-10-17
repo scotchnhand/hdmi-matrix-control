@@ -11,7 +11,7 @@ This repository contains three clients for the HDMI matrix:
 
 ## Build, Test, and Development
 
-Install development dependencies in the subproject you are changing: `pip install -r requirements-dev.txt` from either Python subproject. The HA test environment requires Python 3.13+; use a separate virtual environment from the web backend.
+Install development dependencies in the subproject you are changing: `pip install -r requirements-dev.txt` from either Python subproject. The HA test environment requires Python 3.14.2+; use a separate virtual environment from the web backend.
 
 Run Python tests from the relevant subproject directory with `pytest tests/ -v`; add `--cov=. --cov-report=term-missing` for coverage. Run repository-wide lint from the root with `ruff check .` (or `ruff check --fix .` to apply safe fixes). For iOS, run `cd ios-app/MatrixKit && swift test`; UI tests require Xcode 26+ and an iOS simulator, for example `xcodebuild test -project ios-app/HDMIMatrix.xcodeproj -scheme HDMIMatrix -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` from the repository root.
 
