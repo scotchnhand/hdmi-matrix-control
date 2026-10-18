@@ -82,6 +82,7 @@ jobs:
             echo
             echo "::error::matrix_client.py has diverged between the web app and the Home Assistant integration."
             echo "::error::Apply the same change to both copies (see docs/ROADMAP.md for the plan to de-duplicate this)."
+            echo "::error::Behavior shared with the Swift client is checked by the cases in docs/protocol-fixtures.json."
             exit 1
           fi
           echo "In sync."

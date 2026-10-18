@@ -58,6 +58,10 @@ Tests never touch the real matrix or a real Home Assistant instance:
   and drives it over real HTTP
 - `ha-hdmi-matrix/tests/test_matrix_client.py` — same protocol-layer
   coverage for that copy of the client
+- `tests/test_protocol_fixtures.py` (both subprojects) and MatrixKit's
+  `ProtocolFixtureTests.swift` — run the shared cases in
+  [`docs/protocol-fixtures.json`](protocol-fixtures.json) against all three
+  protocol clients, so the Python and Swift clients can't drift apart
 - `ha-hdmi-matrix/tests/test_config_flow.py` / `test_entities.py` — run the
   integration inside a real in-process Home Assistant (config flow, every
   entity and command, poll failures) with the client replaced by
@@ -117,6 +121,9 @@ Releases don't need their own branch. release-please's release PR (see
    `ha-hdmi-matrix/custom_components/hdmi_matrix/`) — CI's
    `protocol-consistency` job fails the build otherwise. See
    [ROADMAP.md](ROADMAP.md) for the plan to stop needing two copies.
+   Protocol behavior changes start in
+   [`docs/protocol-fixtures.json`](protocol-fixtures.json): add the case
+   there, and the Python and Swift (`MatrixKit`) clients must both pass it.
 3. Add/update tests for the change. A bug fix should come with a test
    that fails without the fix.
 4. `ruff check .` and `pytest tests/ -v` in whatever subproject(s) you

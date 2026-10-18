@@ -6,7 +6,13 @@ and network-tab archaeology — there is no vendor datasheet for this). Both
 `hdmi-matrix-ui/backend/matrix_client.py` and
 `ha-hdmi-matrix/custom_components/hdmi_matrix/matrix_client.py` implement
 exactly this (see [ROADMAP.md](ROADMAP.md) for the plan to de-duplicate
-the two copies).
+the two copies), and so does the iOS app's
+`ios-app/MatrixKit/Sources/MatrixKit/MatrixClient.swift`.
+
+**[`protocol-fixtures.json`](protocol-fixtures.json)** is the executable
+version of this document: captured device responses, the exact wire
+command each client call must send, and inputs every client must reject.
+All three clients' test suites run it, so a protocol change starts there.
 
 ## Shape
 
