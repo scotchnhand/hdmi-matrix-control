@@ -13,6 +13,7 @@ import unittest
 import urllib.error
 import urllib.request
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -102,6 +103,64 @@ class ServerTestCase(unittest.TestCase):
         status, body = self._post("/api/rename", {"kind": "in", "index": 1, "name": "x"})
         self.assertEqual(status, 502)  # MatrixError from rename_port's validation
         self.assertIn("error", body)
+
+    # -- CSRF guard (#40) ------------------------------------------------
+
+    def _raw_post(self, path, body=b"{}", headers=None):
+        req = urllib.request.Request(f"{self.base_url}{path}", data=body, method="POST",
+                                     headers=headers or {})
+        try:
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                return resp.status
+        except urllib.error.HTTPError as exc:
+            return exc.code
+
+    def test_text_plain_post_is_rejected(self):
+        # What a hostile page's fetch(..., {mode: 'no-cors'}) sends.
+        status = self._raw_post("/api/system/factory-reset", headers={"Content-Type": "text/plain"})
+        self.assertEqual(status, 415)
+
+    def test_post_without_content_type_is_rejected(self):
+        status = self._raw_post("/api/system/reboot", headers={"Content-Type": ""})
+        self.assertEqual(status, 415)
+
+    def test_cross_origin_post_is_rejected(self):
+        status = self._raw_post("/api/system/factory-reset", headers={
+            "Content-Type": "application/json", "Origin": "https://evil.example"})
+        self.assertEqual(status, 403)
+
+    def test_rebinding_origin_with_different_port_is_rejected(self):
+        host = self.base_url.removeprefix("http://").split(":")[0]
+        status = self._raw_post("/api/system/reboot", headers={
+            "Content-Type": "application/json", "Origin": f"http://{host}:1"})
+        self.assertEqual(status, 403)
+
+    def test_same_origin_post_is_allowed(self):
+        host = self.base_url.removeprefix("http://")
+        status = self._raw_post("/api/route", json.dumps({"output": 1, "input": 1}).encode(), headers={
+            "Content-Type": "application/json; charset=utf-8", "Origin": f"http://{host}"})
+        self.assertEqual(status, 200)
+
+    def test_rejected_post_never_reaches_the_matrix(self):
+        with patch.object(server_module.client, "factory_reset") as reset:
+            self._raw_post("/api/system/factory-reset", headers={"Content-Type": "text/plain"})
+            self._raw_post("/api/system/factory-reset", headers={
+                "Content-Type": "application/json", "Origin": "https://evil.example"})
+        reset.assert_not_called()
+
+    def test_api_token_required_when_configured(self):
+        with patch.dict(server_module.config, {"api_token": "s3cret"}):
+            self.assertEqual(self._raw_post("/api/route", json.dumps({"output": 1, "input": 1}).encode(),
+                                            headers={"Content-Type": "application/json"}), 401)
+            self.assertEqual(self._raw_post("/api/route", json.dumps({"output": 1, "input": 1}).encode(),
+                                            headers={"Content-Type": "application/json",
+                                                     "X-API-Token": "wrong"}), 401)
+            self.assertEqual(self._raw_post("/api/route", json.dumps({"output": 1, "input": 1}).encode(),
+                                            headers={"Content-Type": "application/json",
+                                                     "X-API-Token": "s3cret"}), 200)
+            # Reading state stays open.
+            status, _ = self._get("/api/state")
+            self.assertEqual(status, 200)
 
     def test_unknown_route_is_404(self):
         status, body = self._post("/api/does-not-exist", {})
