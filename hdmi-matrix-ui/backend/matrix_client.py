@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import base64
 import http.client
+import ipaddress
 import json
 import re
 import threading
@@ -61,6 +62,47 @@ class MatrixError(Exception):
 
 class MatrixAuthError(MatrixError):
     """Raised when the matrix rejects the username/password."""
+
+
+# -- input validation ----------------------------------------------------
+#
+# Commands are space-separated `#command key=value ...` strings, so every
+# value spliced into one must be checked first: a value containing a space,
+# `=` or `#` could append extra keys or a second command (see #41).
+
+NUM_INPUTS = 4
+NUM_OUTPUTS = 2
+VALID_GROUPS = ("0",)  # the only account group observed on the device
+
+
+def validate_port(kind: str, index: int) -> None:
+    if kind not in ("in", "out"):
+        raise MatrixError("kind must be 'in' or 'out'")
+    limit = NUM_INPUTS if kind == "in" else NUM_OUTPUTS
+    if isinstance(index, bool) or not isinstance(index, int) or not 1 <= index <= limit:
+        raise MatrixError(f"index must be 1-{limit} for kind '{kind}'")
+
+
+def _ipv4(label: str, value: str) -> str:
+    try:
+        return str(ipaddress.IPv4Address(str(value).strip()))
+    except ValueError as exc:
+        raise MatrixError(f"{label} must be a dotted IPv4 address") from exc
+
+
+def validate_network(ip: str, mask: str, gw: str) -> tuple[str, str, str]:
+    """Return normalized (ip, mask, gw), or raise MatrixError."""
+    ip, mask, gw = _ipv4("IP", ip), _ipv4("Mask", mask), _ipv4("Gateway", gw)
+    try:
+        ipaddress.IPv4Network(f"0.0.0.0/{mask}")
+    except ValueError as exc:
+        raise MatrixError("Mask must be a valid netmask, e.g. 255.255.255.0") from exc
+    return ip, mask, gw
+
+
+def validate_group(group: str) -> None:
+    if group not in VALID_GROUPS:
+        raise MatrixError(f"group must be one of {', '.join(VALID_GROUPS)}")
 
 
 class MatrixClient:
@@ -211,8 +253,7 @@ class MatrixClient:
         self._video_set(f"#video_d out{output} onoff={1 if on else 0}")
 
     def rename_port(self, kind: str, index: int, name: str) -> None:
-        if kind not in ("in", "out"):
-            raise MatrixError("kind must be 'in' or 'out'")
+        validate_port(kind, index)
         if not NAME_RE.match(name):
             raise MatrixError("Name must be 3-15 letters, numbers, or underscores")
         self._video_set(f"#port {kind}{index} name={name}")
@@ -249,11 +290,13 @@ class MatrixClient:
         self._logged_in = False
 
     def set_network(self, ip: str, mask: str, gw: str) -> None:
+        ip, mask, gw = validate_network(ip, mask, gw)
         with self._lock:
             self._ensure_login()
             self._request("POST", "ip.set", f"#ip ip={ip} mask={mask} gw={gw}")
 
     def set_password(self, user: str, password: str, group: str = "0") -> None:
+        validate_group(group)
         if not CRED_RE.match(user) or not CRED_RE.match(password):
             raise MatrixError("Username/password must be 5-15 letters, numbers, or underscores")
         with self._lock:

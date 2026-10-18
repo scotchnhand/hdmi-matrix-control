@@ -8,7 +8,16 @@ generally for previewing the UI).
 
 from __future__ import annotations
 
-from matrix_client import AUDIO_SOURCE_LABELS, CRED_RE, EDID_PRESETS, NAME_RE, MatrixError
+from matrix_client import (
+    AUDIO_SOURCE_LABELS,
+    CRED_RE,
+    EDID_PRESETS,
+    NAME_RE,
+    MatrixError,
+    validate_group,
+    validate_network,
+    validate_port,
+)
 
 
 class MockMatrixClient:
@@ -56,6 +65,7 @@ class MockMatrixClient:
         self._power[output] = bool(on)
 
     def rename_port(self, kind, index, name):
+        validate_port(kind, index)
         if not NAME_RE.match(name):
             raise MatrixError("Name must be 3-15 letters, numbers, or underscores")
         (self._inputs if kind == "in" else self._outputs)[index] = name
@@ -80,8 +90,9 @@ class MockMatrixClient:
         self._audio = {"arc": 0, "extraction": 1}
 
     def set_network(self, ip, mask, gw):
-        pass
+        validate_network(ip, mask, gw)
 
     def set_password(self, user, password, group="0"):
+        validate_group(group)
         if not CRED_RE.match(user) or not CRED_RE.match(password):
             raise MatrixError("Username/password must be 5-15 letters, numbers, or underscores")

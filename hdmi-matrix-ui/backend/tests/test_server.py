@@ -162,6 +162,17 @@ class ServerTestCase(unittest.TestCase):
             status, _ = self._get("/api/state")
             self.assertEqual(status, 200)
 
+    def test_network_rejects_command_injection(self):
+        status, body = self._post("/api/network", {"ip": "1.2.3.4 gw=0.0.0.0 #factory0",
+                                                   "mask": "255.255.255.0", "gw": "1.2.3.1"})
+        self.assertEqual(status, 502)  # MatrixError, same bucket as other validation failures
+        self.assertIn("IPv4", body["error"])
+
+    def test_rename_rejects_out_of_range_index(self):
+        status, body = self._post("/api/rename", {"kind": "out", "index": 3, "name": "Valid_Name"})
+        self.assertEqual(status, 502)
+        self.assertIn("index", body["error"])
+
     def test_unknown_route_is_404(self):
         status, body = self._post("/api/does-not-exist", {})
         self.assertEqual(status, 404)
