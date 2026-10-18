@@ -6,3 +6,4 @@ backend/requirements-dev.txt
 **/.pytest_cache/
 README.md
 Dockerfile
+docker-compose*.yml

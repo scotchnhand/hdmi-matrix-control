@@ -1,0 +1,61 @@
+# HDMI Matrix UI — ZimaOS / CasaOS custom app.
+# Full guide: docs/DOCKER.md#zimaos
+#
+# In ZimaOS: App Store → "+" → Install a customized app → Import, then
+# paste this file. Change MATRIX_HOST (and the credentials, if you changed
+# them on the matrix) before installing.
+name: hdmi-matrix-ui
+services:
+  hdmi-matrix-ui:
+    image: ghcr.io/scotchnhand/hdmi-matrix-control:latest
+    container_name: hdmi-matrix-ui
+    restart: unless-stopped
+    network_mode: bridge
+    ports:
+      - target: 8765
+        published: "8765"
+        protocol: tcp
+    environment:
+      MATRIX_HOST: 192.168.1.100
+      MATRIX_USERNAME: admin
+      MATRIX_PASSWORD: admin
+      API_TOKEN: ""
+    x-casaos:
+      envs:
+        - container: MATRIX_HOST
+          description:
+            en_us: IP address of the HDMI matrix (use the IP, not matrix.local)
+        - container: MATRIX_USERNAME
+          description:
+            en_us: Matrix web login username
+        - container: MATRIX_PASSWORD
+          description:
+            en_us: Matrix web login password
+        - container: API_TOKEN
+          description:
+            en_us: Optional token required for control requests (leave empty to disable)
+      ports:
+        - container: "8765"
+          description:
+            en_us: Web UI port
+
+x-casaos:
+  architectures:
+    - amd64
+    - arm64
+  main: hdmi-matrix-ui
+  author: scotchnhand
+  developer: scotchnhand
+  category: Utilities
+  title:
+    en_us: HDMI Matrix
+  tagline:
+    en_us: Control a 4x2 HDMI matrix switcher
+  description:
+    en_us: >-
+      A mobile-friendly web app for routing, output power, audio and EDID
+      settings on a generic 4x2 HDMI matrix. Installable as a PWA.
+  icon: https://raw.githubusercontent.com/scotchnhand/hdmi-matrix-control/main/hdmi-matrix-ui/frontend/icons/icon-512.png
+  index: /
+  port_map: "8765"
+  scheme: http

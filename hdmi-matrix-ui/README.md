@@ -36,14 +36,20 @@ Each release publishes a multi-arch image (amd64 and arm64) to the GitHub
 Container Registry:
 
 ```bash
-docker run -d --name hdmi-matrix-ui -p 8765:8765 \
-  -e MATRIX_HOST=matrix.local -e MATRIX_USERNAME=admin -e MATRIX_PASSWORD=admin \
+docker run -d --name hdmi-matrix-ui --restart unless-stopped -p 8765:8765 \
+  -e MATRIX_HOST=192.168.1.100 -e MATRIX_USERNAME=admin -e MATRIX_PASSWORD=admin \
   ghcr.io/scotchnhand/hdmi-matrix-control:latest
 ```
 
-The environment variables override `config.json`. You can mount a config
-file at `/app/backend/config.json` instead. Pin a release tag such as
-`:1.2.0` rather than `:latest` if you don't want upgrades on pull.
+Use the matrix's IP address: containers usually can't resolve
+`matrix.local` (mDNS). The environment variables override `config.json`.
+You can mount a config file at `/app/backend/config.json` instead. Pin a
+release tag such as `:1.2.0` rather than `:latest` if you don't want
+upgrades on pull. [`docker-compose.yml`](docker-compose.yml) is a ready-made
+Compose file.
+
+**[docs/DOCKER.md](../docs/DOCKER.md)** is the full deployment guide,
+including Portainer and ZimaOS steps, reverse proxies, and troubleshooting.
 
 ### Previewing without the hardware
 
