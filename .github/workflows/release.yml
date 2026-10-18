@@ -34,8 +34,6 @@ jobs:
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
-          # Without this, release-please reads its config from, and opens
-          # the release PR against, the repo's default branch, which is dev.
           target-branch: main
 
   ha-integration:
@@ -94,28 +92,3 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
-  sync-dev:
-    name: Open main → dev sync PR
-    needs: release-please
-    if: needs.release-please.outputs.release_created == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v7
-      # The release commit (version bumps, CHANGELOG.md) lands on main, so
-      # dev needs it back before the next release.
-      - name: Open the PR
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TAG: ${{ needs.release-please.outputs.tag_name }}
-        run: |
-          if [ -n "$(gh pr list --base dev --head main --state open --json number --jq '.[].number')" ]; then
-            echo "A main → dev PR is already open."
-            exit 0
-          fi
-          gh pr create --base dev --head main \
-            --title "chore: sync $TAG from main into dev" \
-            --body "Brings the $TAG release commit (version bumps and CHANGELOG.md) back into dev. Merge with a merge commit, not a squash, so main and dev share history."
