@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/scotchnhand/hdmi-matrix-control/compare/v1.2.0...v1.2.1) (2026-10-18)
+
+
+### Bug Fixes
+
+* **web-app:** reject cross-origin and non-JSON POSTs to block CSRF ([#54](https://github.com/scotchnhand/hdmi-matrix-control/issues/54)) ([8b7580e](https://github.com/scotchnhand/hdmi-matrix-control/commit/8b7580e5b5bb388be3c8bceaaee32408ff8cb598))
+
 ## [1.2.0](https://github.com/scotchnhand/hdmi-matrix-control/compare/v1.1.0...v1.2.0) (2026-10-17)
 
 
