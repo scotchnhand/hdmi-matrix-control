@@ -24,6 +24,7 @@
 
 ## Checklist
 
+- [ ] PR title is a Conventional Commit (e.g. `fix(web-app): …`) — it becomes the squash commit and the changelog entry
 - [ ] `ruff check .` passes
 - [ ] `pytest` passes in any subproject you touched
 - [ ] iOS: `swift test` (MatrixKit) and the UI tests pass; if the UI changed, guide screenshots refreshed with `ios-app/scripts/capture_screenshots.sh`
