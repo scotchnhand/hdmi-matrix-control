@@ -1,0 +1,20 @@
+# HDMI Matrix UI — Docker Compose / Portainer stack.
+# Full guide: docs/DOCKER.md
+#
+#   docker compose up -d
+#
+# Set MATRIX_HOST to the matrix's IP address. "matrix.local" is an mDNS
+# name, and containers on a bridge network usually can't resolve it.
+services:
+  hdmi-matrix-ui:
+    image: ghcr.io/scotchnhand/hdmi-matrix-control:${HDMI_MATRIX_TAG:-latest}
+    container_name: hdmi-matrix-ui
+    restart: unless-stopped
+    ports:
+      - "${HDMI_MATRIX_PORT:-8765}:8765"
+    environment:
+      MATRIX_HOST: ${MATRIX_HOST:-192.168.1.100}
+      MATRIX_USERNAME: ${MATRIX_USERNAME:-admin}
+      MATRIX_PASSWORD: ${MATRIX_PASSWORD:-admin}
+      # Optional: require an X-API-Token header on state-changing requests.
+      API_TOKEN: ${API_TOKEN:-}

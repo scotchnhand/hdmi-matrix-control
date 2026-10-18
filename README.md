@@ -46,6 +46,16 @@ optionally "Add to Home Screen" on your phone. See
 [hdmi-matrix-ui/README.md](hdmi-matrix-ui/README.md) for the mock-mode
 preview (no hardware required) and full config options.
 
+**Web app in Docker** (Portainer, ZimaOS, or any Docker host):
+
+```bash
+docker run -d --name hdmi-matrix-ui --restart unless-stopped -p 8765:8765 \
+  -e MATRIX_HOST=<matrix-ip> ghcr.io/scotchnhand/hdmi-matrix-control:latest
+```
+
+See **[docs/DOCKER.md](docs/DOCKER.md)** for Compose, Portainer, and ZimaOS
+instructions.
+
 **Home Assistant:**
 
 Install through HACS as a custom repository, or unzip `hdmi_matrix.zip`
@@ -65,6 +75,7 @@ docs/
   PROTOCOL.md           The matrix's reverse-engineered wire protocol
   ROADMAP.md             What's done, planned, and deliberately rejected
   DEVELOPMENT.md          Dev setup, testing, branch/commit conventions
+  DOCKER.md              Deploying the web app with Docker, Portainer, ZimaOS
 .github/
   workflows/              CI (lint + test + coverage), CodeQL, dependabot.yml
   ISSUE_TEMPLATE/          Bug report / feature request forms
