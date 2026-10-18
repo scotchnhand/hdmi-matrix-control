@@ -1,5 +1,10 @@
 # Secrets / local config — never commit real matrix credentials
 hdmi-matrix-ui/backend/config.json
+.env
+.env.*
+*.pem
+*.p12
+*.mobileprovision
 
 # Python
 __pycache__/
