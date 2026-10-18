@@ -91,18 +91,26 @@ under rapid requests, and a power cycle is the recovery.
 
 ## Branches
 
-- **`dev`** is the development branch and the repo's default. Every
-  feature or fix branches from it and comes back to it through a PR.
-- **`main`** is the release branch. It only moves when `dev` is merged
-  into it, and release automation runs from there.
+The repo is trunk-based: **`main`** is the only long-lived branch and
+the default. It should always be releasable.
 
-CI runs on pushes and PRs to both branches. Dependabot opens its PRs
-against `dev`.
+- Every change goes on a short-lived branch off `main`, named
+  `<type>/<short-description>` (`feat/`, `fix/`, `docs/`, `chore/`,
+  `refactor/`, `ci/`, `test/`), and comes back through a PR. Aim to merge
+  within a few days; split anything bigger, or land it disabled.
+- `main` is protected: no direct pushes, force-pushes or deletion, and a
+  PR needs green CI to merge.
+- PRs are squash-merged, and the branch is deleted automatically after
+  the merge.
+- Dependabot opens its PRs against `main`.
+
+Releases don't need their own branch. release-please's release PR (see
+[Releases](#releases)) is the point where you decide to ship.
 
 ## Making a change
 
-1. Branch off `dev`, the development branch:
-   `git checkout dev && git pull && git checkout -b <type>/<short-description>` (e.g.
+1. Branch off `main`:
+   `git switch main && git pull && git switch -c <type>/<short-description>` (e.g.
    `fix/edid-select-reverts-on-error`, `feat/multi-matrix-support`).
 2. If you touch `matrix_client.py`, **update both copies**
    (`hdmi-matrix-ui/backend/` and
@@ -115,8 +123,9 @@ against `dev`.
    touched; for `ios-app/`, `swift test` and the UI tests (see above).
 5. If this closes or adds a planned item, update
    [ROADMAP.md](ROADMAP.md) in the same PR.
-6. Open a PR against `dev` — the template will prompt for what changed,
-   why, and how it was tested.
+6. Open a PR against `main` with a Conventional Commit title (see
+   below) — the template will prompt for what changed, why, and how it
+   was tested.
 
 ## Commit messages
 
@@ -155,7 +164,7 @@ by hand.
 [release-please](https://github.com/googleapis/release-please) runs from
 `.github/workflows/release.yml` on every push to `main`:
 
-1. Merge `dev` into `main` when it's ready to ship.
+1. Merge feature PRs into `main` as usual.
 2. release-please opens (or updates) a **release PR** against `main`. The
    PR bumps the version from the Conventional Commits since the last
    release (`fix:` → patch, `feat:` → minor, `feat!:` or a
@@ -164,17 +173,17 @@ by hand.
    Release, and then:
    - attaches `hdmi_matrix.zip`, which HACS installs from via `hacs.json`;
    - pushes `ghcr.io/scotchnhand/hdmi-matrix-control` tagged `X.Y.Z`,
-     `X.Y` and `latest`, for amd64 and arm64;
-   - opens a `main` → `dev` PR that brings the release commit back. Merge
-     it with a merge commit, not a squash.
+     `X.Y` and `latest`, for amd64 and arm64.
 
 Because squash merges use the PR title as the commit message, PR titles
-need to follow Conventional Commits too. Only those commit messages
-decide the next version.
+need to follow Conventional Commits too; the `PR title` workflow checks
+this. Only those commit messages decide the next version.
 
 The release PR is opened with the workflow's `GITHUB_TOKEN`, so CI
-doesn't run on it automatically. That's fine for a version-only change;
-use "Re-run" or push an empty commit if you want checks on it.
+doesn't run on it automatically, and `main`'s required checks never
+report. It's a version-only change, so merge it with the admin bypass
+("Merge without waiting for requirements"), or push an empty commit to
+its branch if you want checks on it first.
 
 The iOS app's `MARKETING_VERSION` isn't managed by release-please yet.
 
