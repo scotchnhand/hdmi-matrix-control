@@ -63,6 +63,31 @@ environment variables:
 | `matrix_password` | `MATRIX_PASSWORD` | `admin` |
 | `listen_host` | `LISTEN_HOST` | `0.0.0.0` |
 | `listen_port` | `LISTEN_PORT` | `8765` |
+| `api_token` | `API_TOKEN` | *(empty = disabled)* |
+
+## Security
+
+The app has no login. It's built for a trusted home LAN, and anything
+that can reach the port can control the matrix.
+
+What it does defend against is **cross-site request forgery**: a web page
+you visit making your browser send commands to the app (a factory reset,
+say). Every state-changing `POST /api/*` request is refused unless:
+
+- it has `Content-Type: application/json` (otherwise **415**). This forces
+  browsers to send a CORS preflight first, which the server never approves;
+- any `Origin` header matches the `Host` the app was reached on
+  (otherwise **403**). Same-origin requests from the bundled frontend pass,
+  and non-browser clients that send no `Origin` (curl, scripts) still work.
+
+For defence in depth, or if the port is reachable from outside a
+trusted LAN, set `api_token` / `API_TOKEN`. POSTs must then carry a
+matching `X-API-Token` header (otherwise **401**). The web app prompts for
+the token once and remembers it in that browser. Reading state
+(`GET /api/state`) doesn't need the token.
+
+None of this makes it safe to expose the app to the internet. Use a VPN
+or a reverse proxy with real authentication for that.
 
 ## A note on the hardware
 

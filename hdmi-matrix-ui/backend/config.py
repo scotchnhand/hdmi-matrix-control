@@ -13,6 +13,9 @@ DEFAULTS = {
     "matrix_password": "admin",
     "listen_host": "0.0.0.0",
     "listen_port": 8765,
+    # Optional shared secret for state-changing requests (sent as the
+    # X-API-Token header). Empty disables it.
+    "api_token": "",
 }
 
 
@@ -27,6 +30,7 @@ def load_config() -> dict:
         "MATRIX_PASSWORD": "matrix_password",
         "LISTEN_HOST": "listen_host",
         "LISTEN_PORT": "listen_port",
+        "API_TOKEN": "api_token",
     }
     for env_key, cfg_key in env_map.items():
         if env_key in os.environ:

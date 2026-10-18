@@ -16,6 +16,7 @@ and browsing to it from phones/tablets/laptops sidesteps that.
 
 from __future__ import annotations
 
+import hmac
 import json
 import mimetypes
 import socket
@@ -50,6 +51,50 @@ def json_body(handler: BaseHTTPRequestHandler) -> dict:
         return json.loads(raw.decode("utf-8"))
     except json.JSONDecodeError as exc:
         raise MatrixError(f"Invalid JSON body: {exc}") from exc
+
+
+def _is_json(handler: BaseHTTPRequestHandler) -> bool:
+    ctype = handler.headers.get("Content-Type", "")
+    return ctype.split(";", 1)[0].strip().lower() == "application/json"
+
+
+def _origin_allowed(handler: BaseHTTPRequestHandler) -> bool:
+    """Same-origin check against the Host header.
+
+    Requests without an Origin header (curl, scripts, Home Assistant) are
+    allowed: browsers always send Origin on cross-origin POSTs, so its
+    absence means the request didn't come from a hostile web page.
+    """
+    origin = handler.headers.get("Origin")
+    if origin is None:
+        return True
+    host = handler.headers.get("Host", "")
+    return urlparse(origin).netloc.lower() == host.lower()
+
+
+def _token_ok(handler: BaseHTTPRequestHandler) -> bool:
+    token = config.get("api_token") or ""
+    if not token:
+        return True
+    supplied = handler.headers.get("X-API-Token", "")
+    return hmac.compare_digest(supplied.encode("utf-8"), token.encode("utf-8"))
+
+
+def csrf_rejection(handler: BaseHTTPRequestHandler) -> tuple[int, str] | None:
+    """Return (status, message) if a state-changing request must be refused.
+
+    Requiring application/json makes every POST "non-simple", so a browser
+    must send a CORS preflight first -- which this server never answers --
+    and a hostile page can't fire commands at the matrix. The Origin check
+    also covers DNS-rebinding and any browser that skips preflight.
+    """
+    if not _is_json(handler):
+        return 415, "Content-Type must be application/json"
+    if not _origin_allowed(handler):
+        return 403, "Cross-origin request rejected"
+    if not _token_ok(handler):
+        return 401, "Missing or invalid API token"
+    return None
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -104,6 +149,11 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         path = urlparse(self.path).path
+        rejection = csrf_rejection(self)
+        if rejection is not None:
+            status, message = rejection
+            self._send_json({"error": message}, status=status)
+            return
         try:
             body = json_body(self)
         except MatrixError as exc:

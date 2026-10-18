@@ -60,7 +60,9 @@ async function api(path, options) {
   try { body = await res.json(); } catch (e) { /* no body */ }
   if (!res.ok) {
     const message = (body && body.error) || `Request failed (${res.status})`;
-    throw new Error(message);
+    const err = new Error(message);
+    err.status = res.status;
+    throw err;
   }
   return body;
 }
@@ -69,14 +71,40 @@ async function fetchState() {
   return api('/api/state');
 }
 
+// Optional shared secret, only needed when the server sets API_TOKEN.
+const TOKEN_KEY = 'hdmi-matrix-api-token';
+
+function getToken() {
+  try { return localStorage.getItem(TOKEN_KEY) || ''; } catch (e) { return ''; }
+}
+
+function setToken(value) {
+  try { localStorage.setItem(TOKEN_KEY, value); } catch (e) { /* private mode */ }
+}
+
+function postJSON(path, payload) {
+  const headers = { 'Content-Type': 'application/json' };
+  const token = getToken();
+  if (token) headers['X-API-Token'] = token;
+  return api(path, { method: 'POST', headers, body: JSON.stringify(payload || {}) });
+}
+
+async function postWithTokenRetry(path, payload) {
+  try {
+    return await postJSON(path, payload);
+  } catch (err) {
+    if (err.status !== 401) throw err;
+    const entered = prompt('This server requires an API token. Enter it to continue:');
+    if (!entered) throw err;
+    setToken(entered.trim());
+    return postJSON(path, payload);
+  }
+}
+
 async function sendAction(path, payload) {
   busy = true;
   try {
-    const next = await api(path, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload || {}),
-    });
+    const next = await postWithTokenRetry(path, payload);
     if (next && next.inputs) {
       state = next;
       render();
