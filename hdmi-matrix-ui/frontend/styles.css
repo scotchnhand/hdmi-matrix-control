@@ -875,3 +875,29 @@ button {
     scroll-behavior: auto !important;
   }
 }
+
+/* Solid fallback for the glass tokens. The tripled :root outranks the theme
+   selectors above, so the fallback wins in both light and dark. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root:root:root {
+    --glass-surface: var(--surface);
+    --glass-raised: var(--surface-raised);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root:root:root {
+    --glass-surface: var(--surface);
+    --glass-raised: var(--surface-raised);
+    --glass-blur: 0px;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root:root:root {
+    --glass-surface: var(--surface);
+    --glass-raised: var(--surface-raised);
+    --glass-border: var(--border-strong);
+    --glass-border-strong: var(--text-dim);
+  }
+}
