@@ -5,6 +5,7 @@ network/hardware dependency."""
 
 from __future__ import annotations
 
+import http.client
 import json
 import os
 import sys
@@ -33,6 +34,9 @@ class ServerTestCase(unittest.TestCase):
         cls.base_url = f"http://127.0.0.1:{cls.httpd.server_address[1]}"
         cls.thread = threading.Thread(target=cls.httpd.serve_forever, daemon=True)
         cls.thread.start()
+
+    def setUp(self):
+        server_module.state_cache.invalidate()
 
     @classmethod
     def tearDownClass(cls):
@@ -176,6 +180,67 @@ class ServerTestCase(unittest.TestCase):
     def test_unknown_route_is_404(self):
         status, body = self._post("/api/does-not-exist", {})
         self.assertEqual(status, 404)
+
+    # -- request body validation (#45) ---------------------------------
+
+    def _post_with_content_length(self, value, body=b"{}"):
+        host, port = self.httpd.server_address
+        conn = http.client.HTTPConnection(host, port, timeout=5)
+        conn.putrequest("POST", "/api/route")
+        conn.putheader("Content-Type", "application/json")
+        conn.putheader("Content-Length", value)
+        conn.endheaders(body)
+        response = conn.getresponse()
+        payload = json.loads(response.read())
+        conn.close()
+        return response.status, payload
+
+    def test_bad_content_length_returns_400(self):
+        status, body = self._post_with_content_length("abc")
+        self.assertEqual(status, 400)
+        self.assertIn("Invalid Content-Length", body["error"])
+
+    def test_negative_and_oversized_content_length_return_400(self):
+        for value in ("-1", str(server_module.MAX_BODY_BYTES + 1)):
+            status, body = self._post_with_content_length(value)
+            self.assertEqual(status, 400)
+            self.assertIn("body", body["error"])
+
+    def test_invalid_utf8_and_non_object_json_return_400(self):
+        status = self._raw_post(
+            "/api/route", b"\xff", headers={"Content-Type": "application/json"}
+        )
+        self.assertEqual(status, 400)
+        status, body = self._post("/api/route", [1, 2])
+        self.assertEqual(status, 400)
+        self.assertIn("JSON body must be an object", body["error"])
+
+    def test_state_cache_coalesces_reads_and_invalidates(self):
+        class CountingClient:
+            def __init__(self):
+                self.reads = 0
+
+            def get_state(self):
+                self.reads += 1
+                return {"reads": self.reads}
+
+        client = CountingClient()
+        cache = server_module.StateCache(client, ttl=10)
+        for _ in range(20):
+            cache.get()
+        self.assertEqual(client.reads, 1)
+        cache.invalidate()
+        self.assertEqual(cache.get(), {"reads": 2})
+
+
+class TestStartupHelpers(unittest.TestCase):
+    def test_detect_lan_ip_returns_none_on_socket_error(self):
+        with patch("socket.socket.connect", side_effect=OSError("no route")):
+            self.assertIsNone(server_module.detect_lan_ip())
+
+    def test_detect_lan_ip_ignores_loopback(self):
+        with patch("socket.socket.getsockname", return_value=("127.0.0.1", 0)):
+            self.assertIsNone(server_module.detect_lan_ip())
 
 
 if __name__ == "__main__":

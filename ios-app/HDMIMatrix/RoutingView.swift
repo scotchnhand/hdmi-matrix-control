@@ -88,10 +88,10 @@ struct OutputCard: View {
                         chip(for: input)
                     }
                 }
-                .disabled(!output.power)
+                .opacity(output.power ? 1 : 0.6)
 
                 if !output.power {
-                    Label("Turn the output on to switch sources.", systemImage: "power")
+                    Label("Output is off. Picking a source now takes effect when it turns on.", systemImage: "power")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }

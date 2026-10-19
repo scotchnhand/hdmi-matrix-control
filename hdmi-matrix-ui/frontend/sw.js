@@ -1,6 +1,7 @@
 // Caches the static app shell so the PWA opens instantly; /api/* is always
 // fetched live (never cached) since it's the whole point of the app.
-const CACHE_NAME = 'hdmi-matrix-shell-v3';
+const APP_VERSION = '1.2.1'; // x-release-please-version
+const CACHE_NAME = `hdmi-matrix-shell-${APP_VERSION}`;
 const SHELL_FILES = [
   '/',
   '/styles.css',
@@ -28,6 +29,11 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   if (url.pathname.startsWith('/api/')) return; // never cache live state/commands
+
+  if (event.request.mode === 'navigate') {
+    event.respondWith(fetch(event.request).catch(() => caches.match('/')));
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then((cached) => {

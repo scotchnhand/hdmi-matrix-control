@@ -31,7 +31,10 @@ final class HDMIMatrixUITests: XCTestCase {
         let rightPower = app.switches["output-2-power"]
         toggle(rightPower)
         expectValue(rightPower, "0")
-        XCTAssertFalse(app.buttons["route-2-1"].isEnabled, "chips should disable when the output is off")
+        let preselectedWhileOff = app.buttons["route-2-1"]
+        XCTAssertTrue(preselectedWhileOff.isEnabled, "sources should remain selectable while the output is off")
+        preselectedWhileOff.tap()
+        expectSelected(preselectedWhileOff)
         snap("03-output-power-off")
         toggle(rightPower)
         expectValue(rightPower, "1")

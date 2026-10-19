@@ -9,6 +9,21 @@
           "username": "Username",
           "password": "Password"
         }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate with HDMI Matrix",
+        "description": "The matrix rejected the saved credentials. Enter the current credentials.",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure HDMI Matrix",
+        "description": "Update the hostname or IP address of the matrix.",
+        "data": {
+          "host": "Host"
+        }
       }
     },
     "error": {
@@ -17,7 +32,9 @@
       "unknown": "Unexpected error."
     },
     "abort": {
-      "already_configured": "This matrix is already configured."
+      "already_configured": "This matrix is already configured.",
+      "reauth_successful": "Re-authentication successful.",
+      "reconfigure_successful": "Reconfiguration successful."
     }
   }
 }

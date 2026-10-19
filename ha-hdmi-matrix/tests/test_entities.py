@@ -6,6 +6,7 @@ from datetime import timedelta
 
 import pytest
 from custom_components.hdmi_matrix.const import UPDATE_INTERVAL_SECONDS
+from custom_components.hdmi_matrix.diagnostics import async_get_config_entry_diagnostics
 from custom_components.hdmi_matrix.matrix_client import MatrixError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, EntityCategory
@@ -50,6 +51,17 @@ async def test_route_select(hass, setup_integration, fake_client):
     await hass.async_block_till_done()
     assert ("set_route", 1, 2) in fake_client.calls
     assert hass.states.get("select.hdmi_matrix_left_source").state == "MacBook"
+
+
+async def test_route_select_disambiguates_duplicate_input_names(hass, setup_integration, fake_client):
+    fake_client.state["inputs"][0]["name"] = "MacBook"
+    await setup_integration.runtime_data.async_request_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.hdmi_matrix_left_source")
+    assert state.attributes["options"] == ["MacBook (1)", "MacBook (2)", "AppleTv", "MacMini"]
+    await _call(hass, "select", "select_option", "select.hdmi_matrix_left_source", option="MacBook (2)")
+    assert ("set_route", 1, 2) in fake_client.calls
 
 
 async def test_route_select_available_while_output_off(hass, setup_integration, fake_client):
@@ -125,6 +137,26 @@ async def test_audio_select_sets_value(hass, setup_integration, fake_client):
     assert ("set_audio", "arc", 2) in fake_client.calls
     assert ("set_audio", "extraction", 0) in fake_client.calls
     assert hass.states.get("select.hdmi_matrix_audio_return_arc").state == "Right"
+
+
+async def test_audio_select_disambiguates_duplicate_and_reserved_output_names(
+    hass, setup_integration, fake_client
+):
+    fake_client.state["outputs"][0]["name"] = "Off"
+    fake_client.state["outputs"][1]["name"] = "Off"
+    await setup_integration.runtime_data.async_request_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.hdmi_matrix_audio_extraction")
+    assert state.attributes["options"] == ["Off", "Off (1)", "Off (2)"]
+    await _call(hass, "select", "select_option", "select.hdmi_matrix_audio_extraction", option="Off (2)")
+    assert ("set_audio", "extraction", 2) in fake_client.calls
+
+
+async def test_diagnostics_redact_credentials_and_account(hass, setup_integration):
+    diagnostics = await async_get_config_entry_diagnostics(hass, setup_integration)
+    assert diagnostics["entry"]["password"] != "admin"
+    assert diagnostics["state"]["device"]["account"] != "admin"
 
 
 # -- renaming -------------------------------------------------------------

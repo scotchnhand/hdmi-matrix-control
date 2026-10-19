@@ -26,6 +26,7 @@ REAL_VIDEO_RESPONSE = (
     '\t\t\t      "out1":"Left",\t\t\t      "out2":"Right",\t\t\t      "ver":"V0.0.11",            });'
 )
 REAL_AUDIO_RESPONSE = 'AudioCallback({"arc":"0",            "ext":"1",            });'
+REAL_LOGIN_OK = 'settingsLoginCallback({"status":"0","str":"",});'
 
 
 def make_client() -> MatrixClient:
@@ -54,6 +55,16 @@ class TestGetState(unittest.TestCase):
         self.assertEqual({o["index"] for o in state["outputs"]}, {1, 2})
         self.assertEqual({i["index"] for i in state["inputs"]}, {1, 2, 3, 4})
         self.assertEqual(len(state["edid_presets"]), len(EDID_PRESETS))
+
+    def test_malformed_response_relogs_and_retries_once(self):
+        client = make_client()
+        client._logged_in = True
+        responses = iter(["<html>login</html>", REAL_LOGIN_OK, REAL_VIDEO_RESPONSE])
+        with patch.object(client, "_request", side_effect=lambda *args: next(responses)) as request:
+            video = client.get_video()
+
+        self.assertEqual(video["in1"], "Windows")
+        self.assertEqual(request.call_count, 3)
 
 
 class TestCommandValidation(unittest.TestCase):

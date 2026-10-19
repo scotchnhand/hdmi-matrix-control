@@ -10,7 +10,7 @@ embedded web UI and no public API documentation. This repo replaces that UI
 with two things, both talking directly to the matrix over your LAN (no
 cloud, no vendor app):
 
-| | |
+| Component | What it provides |
 |---|---|
 | **[`hdmi-matrix-ui/`](hdmi-matrix-ui/)** | A local web app — zero-dependency Python backend + a dark-mode, high-contrast, installable-as-a-PWA frontend |
 | **[`ha-hdmi-matrix/`](ha-hdmi-matrix/)** | A Home Assistant custom integration — `select`/`switch`/`button`/`sensor` entities for routing, power, and EDID |
@@ -67,22 +67,33 @@ list and why this uses direct IP instead of Matter.
 
 ## Repo structure
 
-```
-hdmi-matrix-ui/        Local web app (backend/ + frontend/), own README
-ha-hdmi-matrix/         Home Assistant integration, own README
-ios-app/                Native SwiftUI app + MatrixKit Swift package, own README
-docs/
-  PROTOCOL.md           The matrix's reverse-engineered wire protocol
-  ROADMAP.md             What's done, planned, and deliberately rejected
-  DEVELOPMENT.md          Dev setup, testing, branch/commit conventions
-  DOCKER.md              Deploying the web app with Docker, Portainer, ZimaOS
-.github/
-  workflows/              CI (lint + test + coverage), CodeQL, dependabot.yml
-  ISSUE_TEMPLATE/          Bug report / feature request forms
-  PULL_REQUEST_TEMPLATE.md
-CONTRIBUTING.md
-LICENSE                  MIT
-```
+Every entry below links directly to the corresponding file or directory on
+GitHub:
+
+- [`hdmi-matrix-ui/`](hdmi-matrix-ui/) — local web app
+  - [`backend/`](hdmi-matrix-ui/backend/) — zero-dependency Python proxy and tests
+  - [`frontend/`](hdmi-matrix-ui/frontend/) — installable web UI and PWA assets
+  - [`README.md`](hdmi-matrix-ui/README.md) — web-app setup and configuration
+- [`ha-hdmi-matrix/`](ha-hdmi-matrix/) — Home Assistant integration
+  - [`custom_components/hdmi_matrix/`](ha-hdmi-matrix/custom_components/hdmi_matrix/) — integration source
+  - [`tests/`](ha-hdmi-matrix/tests/) — Home Assistant integration tests
+  - [`README.md`](ha-hdmi-matrix/README.md) — installation and entity reference
+- [`ios-app/`](ios-app/) — native SwiftUI app
+  - [`HDMIMatrix/`](ios-app/HDMIMatrix/) — app target
+  - [`MatrixKit/`](ios-app/MatrixKit/) — reusable Swift protocol client
+  - [`README.md`](ios-app/README.md) — Xcode setup and testing
+- [`docs/`](docs/) — protocol, development, roadmap, and deployment documentation
+  - [`PROTOCOL.md`](docs/PROTOCOL.md) — reverse-engineered wire protocol
+  - [`ROADMAP.md`](docs/ROADMAP.md) — what's done, planned, and deliberately rejected
+  - [`DEVELOPMENT.md`](docs/DEVELOPMENT.md) — setup, testing, and branch conventions
+  - [`DOCKER.md`](docs/DOCKER.md) — Docker, Portainer, and ZimaOS deployment
+- [`.github/`](.github/) — workflows, issue forms, and pull-request templates
+  - [`workflows/`](.github/workflows/) — CI, release, CodeQL, and dependency updates
+  - [`ISSUE_TEMPLATE/`](.github/ISSUE_TEMPLATE/) — bug-report and feature-request forms
+  - [`PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md)
+- [`AGENTS.md`](AGENTS.md) — repository guidelines for contributors and coding agents
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — contribution workflow
+- [`LICENSE`](LICENSE) — MIT license
 
 ## Development, testing, and contributing
 
@@ -101,9 +112,13 @@ were deliberately ruled out).
 This class of matrix has a fragile, single-threaded embedded HTTP server
 that can lock up under rapid or concurrent requests. If either client
 shows "connection lost" and stays that way, power-cycle the matrix
-(unplug/replug) — no settings are lost. Both `matrix_client.py`
+(unplug/replug) — no settings are lost. Both [`matrix_client.py`](hdmi-matrix-ui/backend/matrix_client.py)
 implementations serialize requests to the device specifically to minimize
-this. Details in [docs/PROTOCOL.md](docs/PROTOCOL.md).
+this. The web backend also coalesces reads from multiple open tabs for a
+short interval. Home Assistant and the iOS app are separate direct pollers,
+so a deployment with several clients should choose one direct poller where
+possible. Details are in [docs/PROTOCOL.md](docs/PROTOCOL.md) and the
+[roadmap](docs/ROADMAP.md#architecture).
 
 ## License
 

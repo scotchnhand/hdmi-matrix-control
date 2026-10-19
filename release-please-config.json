@@ -14,7 +14,9 @@
           "path": "ha-hdmi-matrix/custom_components/hdmi_matrix/manifest.json",
           "jsonpath": "$.version"
         },
-        "hdmi-matrix-ui/backend/version.py"
+        "hdmi-matrix-ui/backend/version.py",
+        "hdmi-matrix-ui/frontend/sw.js",
+        "ios-app/HDMIMatrix.xcodeproj/project.pbxproj"
       ]
     }
   }

@@ -31,6 +31,10 @@ let state = null;
 let busy = false;       // true while a user-initiated request is in flight
 let pollTimer = null;
 let renameTarget = null; // {kind: 'in'|'out', index: number}
+let stateVersion = 0;   // bumped by every user action
+let lastRoutingKey = '';
+let lastInputsKey = '';
+let lastConnMode = 'connecting';
 
 // ---------- theme ----------
 
@@ -39,14 +43,27 @@ function initTheme() {
   if (saved === 'light' || saved === 'dark') {
     document.documentElement.setAttribute('data-theme', saved);
   }
+  updateThemeToggle();
+}
+
+function currentTheme() {
+  return document.documentElement.getAttribute('data-theme')
+    || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+}
+
+function updateThemeToggle() {
+  const theme = currentTheme();
+  const next = theme === 'dark' ? 'light' : 'dark';
+  el.themeToggle.setAttribute('aria-label', `Switch to ${next} theme`);
+  el.themeToggle.setAttribute('aria-pressed', String(theme === 'dark'));
 }
 
 function toggleTheme() {
-  const current = document.documentElement.getAttribute('data-theme')
-    || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const current = currentTheme();
   const next = current === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
   try { localStorage.setItem('hdmi-matrix-theme', next); } catch (e) { /* private mode, ignore */ }
+  updateThemeToggle();
 }
 
 el.themeToggle.addEventListener('click', toggleTheme);
@@ -103,6 +120,7 @@ async function postWithTokenRetry(path, payload) {
 
 async function sendAction(path, payload) {
   busy = true;
+  stateVersion += 1;
   try {
     const next = await postWithTokenRetry(path, payload);
     if (next && next.inputs) {
@@ -121,6 +139,8 @@ async function sendAction(path, payload) {
 }
 
 function setConnState(mode) {
+  if (mode === lastConnMode) return;
+  lastConnMode = mode;
   el.connStatus.dataset.state = mode;
   const label = el.connStatus.querySelector('.status__label');
   label.textContent = mode === 'ok' ? 'Connected' : mode === 'error' ? 'Connection lost' : 'Connecting…';
@@ -141,19 +161,32 @@ function showToast(message, kind) {
 
 async function poll() {
   if (busy) return;
+  const startedAt = stateVersion;
   try {
-    state = await fetchState();
+    const next = await fetchState();
+    if (busy || stateVersion !== startedAt) return;
+    state = next;
     setConnState('ok');
     render();
   } catch (err) {
-    setConnState('error');
+    if (!busy && stateVersion === startedAt) setConnState('error');
   }
 }
 
 function startPolling() {
+  if (pollTimer) return;
   poll();
   pollTimer = setInterval(poll, POLL_INTERVAL_MS);
 }
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    clearInterval(pollTimer);
+    pollTimer = null;
+  } else {
+    startPolling();
+  }
+});
 
 // ---------- rendering ----------
 
@@ -168,6 +201,10 @@ function render() {
 }
 
 function renderRouting() {
+  const key = JSON.stringify([state.outputs, state.inputs.map((input) => [input.index, input.name])]);
+  if (key === lastRoutingKey) return;
+  const focusedId = document.activeElement?.dataset?.focusId;
+  lastRoutingKey = key;
   el.routingGrid.innerHTML = '';
   for (const output of state.outputs) {
     const card = document.createElement('div');
@@ -180,7 +217,14 @@ function renderRouting() {
     nameWrap.className = 'route-card__name';
     const nameBtn = document.createElement('button');
     nameBtn.type = 'button';
+    nameBtn.className = 'rename-button';
     nameBtn.textContent = output.name;
+    nameBtn.setAttribute('aria-label', `Rename output ${output.name}`);
+    const editIcon = document.createElement('span');
+    editIcon.className = 'rename-button__icon';
+    editIcon.textContent = '✎';
+    editIcon.setAttribute('aria-hidden', 'true');
+    nameBtn.appendChild(editIcon);
     nameBtn.title = 'Rename this output';
     nameBtn.addEventListener('click', () => openRename('out', output.index, output.name));
     const sub = document.createElement('span');
@@ -202,15 +246,22 @@ function renderRouting() {
 
     const chooser = document.createElement('div');
     chooser.className = 'input-chooser';
+    chooser.setAttribute('role', 'radiogroup');
+    chooser.setAttribute('aria-label', `${output.name} source`);
     for (const input of state.inputs) {
       const chip = document.createElement('button');
       chip.type = 'button';
+      chip.setAttribute('role', 'radio');
       chip.className = 'input-chip';
       chip.textContent = input.name;
       const active = input.index === output.input_index;
-      chip.setAttribute('aria-pressed', String(active));
-      chip.disabled = !output.power;
-      chip.title = !output.power ? 'Turn the output on to switch sources' : `Route ${input.name} to ${output.name}`;
+      chip.setAttribute('aria-checked', String(active));
+      chip.dataset.focusId = `o${output.index}i${input.index}`;
+      chip.disabled = false;
+      chip.classList.toggle('input-chip--standby', !output.power);
+      chip.title = output.power
+        ? `Route ${input.name} to ${output.name}`
+        : `Pre-select ${input.name} for ${output.name} (output is off)`;
       chip.addEventListener('click', () => {
         if (active) return;
         sendAction('/api/route', { output: output.index, input: input.index }).catch(() => {});
@@ -221,6 +272,7 @@ function renderRouting() {
     card.append(header, chooser);
     el.routingGrid.appendChild(card);
   }
+  if (focusedId) document.querySelector(`[data-focus-id="${focusedId}"]`)?.focus();
 }
 
 function renderAudio() {
@@ -243,7 +295,8 @@ function renderAudio() {
         sub.textContent = output.power ? `${output.name} · ${wire}` : `${output.name} off · ${wire}`;
         btn.replaceChildren(main, sub);
       }
-      btn.setAttribute('aria-pressed', String(value === current));
+      btn.setAttribute('role', 'radio');
+      btn.setAttribute('aria-checked', String(value === current));
       btn.onclick = () => {
         if (value === current) return;
         sendAction('/api/audio', { mode, value }).catch(() => {});
@@ -253,6 +306,11 @@ function renderAudio() {
 }
 
 function renderInputs() {
+  if (el.inputList.contains(document.activeElement) && document.activeElement.tagName === 'SELECT') return;
+  const key = JSON.stringify([state.inputs, state.edid_presets]);
+  if (key === lastInputsKey) return;
+  const focusedId = document.activeElement?.dataset?.focusId;
+  lastInputsKey = key;
   el.inputList.innerHTML = '';
   for (const input of state.inputs) {
     const row = document.createElement('div');
@@ -262,7 +320,14 @@ function renderInputs() {
     nameWrap.className = 'input-row__name';
     const nameBtn = document.createElement('button');
     nameBtn.type = 'button';
+    nameBtn.className = 'rename-button';
     nameBtn.textContent = input.name;
+    nameBtn.setAttribute('aria-label', `Rename input ${input.name}`);
+    const editIcon = document.createElement('span');
+    editIcon.className = 'rename-button__icon';
+    editIcon.textContent = '✎';
+    editIcon.setAttribute('aria-hidden', 'true');
+    nameBtn.appendChild(editIcon);
     nameBtn.title = 'Rename this input';
     nameBtn.addEventListener('click', () => openRename('in', input.index, input.name));
     const idx = document.createElement('span');
@@ -271,6 +336,7 @@ function renderInputs() {
     nameWrap.append(nameBtn, idx);
 
     const select = document.createElement('select');
+    select.dataset.focusId = `edid${input.index}`;
     select.setAttribute('aria-label', `EDID preset for ${input.name}`);
     for (const preset of state.edid_presets) {
       const opt = document.createElement('option');
@@ -288,6 +354,7 @@ function renderInputs() {
     row.append(nameWrap, select);
     el.inputList.appendChild(row);
   }
+  if (focusedId) document.querySelector(`[data-focus-id="${focusedId}"]`)?.focus();
 }
 
 function renderDeviceInfo() {
@@ -403,11 +470,19 @@ el.rebootBtn.addEventListener('click', () => {
 });
 
 el.factoryResetBtn.addEventListener('click', () => {
-  if (!confirm('Factory reset the matrix? This erases all routing, names, EDID, and network settings. This cannot be undone.')) return;
-  if (!confirm('Really sure? Type OK in the next prompt to confirm.')) return;
-  const typed = prompt('Type RESET to confirm the factory reset:');
-  if (typed !== 'RESET') { showToast('Factory reset cancelled', 'info'); return; }
-  sendAction('/api/system/factory-reset').then(() => showToast('Factory reset sent', 'success')).catch(() => {});
+  const typed = prompt(
+    'Factory reset erases all routing, port names, EDID, network settings and the login password.\n' +
+    'The matrix may come back on a different IP address. This cannot be undone.\n\n' +
+    'Type RESET to confirm:'
+  );
+  if (typed === null) return;
+  if (typed.trim().toUpperCase() !== 'RESET') {
+    showToast('Factory reset cancelled -- confirmation text did not match', 'info');
+    return;
+  }
+  sendAction('/api/system/factory-reset')
+    .then(() => showToast('Factory reset sent. If the matrix does not reconnect, check its IP.', 'success'))
+    .catch(() => {});
 });
 
 // ---------- boot ----------

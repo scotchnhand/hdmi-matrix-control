@@ -22,6 +22,9 @@ these are welcome — see [DEVELOPMENT.md](DEVELOPMENT.md).
 - [x] CI: lint, test + coverage, HA manifest validation (`hassfest`), a
       protocol-consistency check between the two `matrix_client.py`
       copies, and weekly CodeQL + Dependabot
+- [x] Coordinate web-app reads within one backend process with a short-lived
+      state cache; direct polling from separate HA/iOS processes remains a
+      documented deployment trade-off
 
 ### iOS app
 
@@ -66,6 +69,9 @@ exactly that.
       coordinator's 5s poll with a push model if the device ever exposes
       one — it doesn't currently (no WebSocket/SSE), so this is blocked on
       the hardware, not on us.
+- [ ] Optional shared web-backend mode for HA and iOS, so one process is the
+      only direct poller talking to the fragile matrix (Phase 2 of the
+      multi-client polling plan).
 
 ### Web app
 
@@ -90,7 +96,8 @@ exactly that.
 - [x] Release automation: release-please release PRs, `vX.Y.Z` tags,
       GitHub Releases with changelog, the HA integration zip and the web
       app image on GHCR (see docs/DEVELOPMENT.md → Releases)
-- [ ] Bring the iOS app's `MARKETING_VERSION` under release-please
+- [x] Bring the iOS app's `MARKETING_VERSION` and PWA service-worker cache
+      version under release-please
 
 ## Explicitly rejected
 

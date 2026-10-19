@@ -174,20 +174,33 @@ class MatrixClient:
 
     # -- state (GET) -------------------------------------------------------
 
-    def get_video(self) -> dict:
+    def _get_page(self, page: str, callback: str) -> dict:
+        """GET a state page, re-authenticating once after session loss.
+
+        The device can forget its credentials after a reboot initiated by a
+        different client. It signals that condition by returning its login
+        page (or another malformed response), so retry the read once after a
+        fresh login. Transport errors happen before parsing and are allowed to
+        propagate without an unnecessary login attempt.
+        """
         with self._lock:
             self._ensure_login()
-            return self._parse_jsonp(self._request("GET", "video.get"), "VideoCallback")
+            text = self._request("GET", f"{page}.get")
+            try:
+                return self._parse_jsonp(text, callback)
+            except MatrixError:
+                self._logged_in = False
+                self.login()
+                return self._parse_jsonp(self._request("GET", f"{page}.get"), callback)
+
+    def get_video(self) -> dict:
+        return self._get_page("video", "VideoCallback")
 
     def get_audio(self) -> dict:
-        with self._lock:
-            self._ensure_login()
-            return self._parse_jsonp(self._request("GET", "audio.get"), "AudioCallback")
+        return self._get_page("audio", "AudioCallback")
 
     def get_edid(self) -> dict:
-        with self._lock:
-            self._ensure_login()
-            return self._parse_jsonp(self._request("GET", "edid.get"), "EdidCallback")
+        return self._get_page("edid", "EdidCallback")
 
     def get_state(self) -> dict:
         """Aggregate + normalize all three state endpoints into one shape."""
@@ -281,13 +294,13 @@ class MatrixClient:
         with self._lock:
             self._ensure_login()
             self._request("POST", "system_set", "#power start=1")
-        self._logged_in = False  # device will drop state across reboot
+            self._logged_in = False  # device will drop state across reboot
 
     def factory_reset(self) -> None:
         with self._lock:
             self._ensure_login()
             self._request("POST", "system_set", "#factory0")
-        self._logged_in = False
+            self._logged_in = False
 
     def set_network(self, ip: str, mask: str, gw: str) -> None:
         ip, mask, gw = validate_network(ip, mask, gw)
