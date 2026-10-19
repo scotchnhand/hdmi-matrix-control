@@ -1,0 +1,53 @@
+{
+  "_comment": "Language-neutral protocol cases shared by every client: both copies of matrix_client.py and MatrixKit's MatrixClient.swift. Protocol changes start here; all three test suites must pass. See docs/PROTOCOL.md.",
+  "responses": {
+    "video": "VideoCallback({\"o1\":\"2\",            \"o2\":\"2\",            \"s1\":\"1\",            \"s2\":\"1\",            \"group\":\"0\",            \"account\":\"admin\",            \"ip\":\"192.168.17.238\",            \"port\":\"001011\",            \"in1\":\"Windows\",\t\t\t      \"in2\":\"MacBook\",\t\t\t      \"in3\":\"AppleTv\",\t\t\t      \"in4\":\"MacMini\",\t\t\t      \"out1\":\"Left\",\t\t\t      \"out2\":\"Right\",\t\t\t      \"ver\":\"V0.0.11\",            });",
+    "audio": "AudioCallback({\"arc\":\"0\",            \"ext\":\"1\",            });",
+    "edid": "EdidCallback({\"i1\":\"15\",            \"i2\":\"1\",            \"i3\":\"2\",            \"i4\":\"15\",            \"e1\":\"1920x1080P@60 LPCM:2.0\",            \"e2\":\"1920x1200P@60 LPCM:2.0\",            \"e3\":\"1920x1080P@60 LPCM:2.0\",            \"port\":\"001011\",            });",
+    "login_ok": "settingsLoginCallback({\"status\":\"0\",\"str\":\"\",});",
+    "login_fail": "settingsLoginCallback({\"status\":\"6\",\"str\":\"Invalid user or password\",});"
+  },
+  "state": {
+    "firmware": "V0.0.11",
+    "inputs": [
+      {"index": 1, "name": "Windows", "edid_preset": 15},
+      {"index": 2, "name": "MacBook", "edid_preset": 1},
+      {"index": 3, "name": "AppleTv", "edid_preset": 2},
+      {"index": 4, "name": "MacMini", "edid_preset": 15}
+    ],
+    "outputs": [
+      {"index": 1, "name": "Left", "input_index": 3, "power": true},
+      {"index": 2, "name": "Right", "input_index": 3, "power": true}
+    ],
+    "audio": {"arc": 0, "extraction": 1}
+  },
+  "commands": [
+    {"call": "set_route", "args": {"output": 1, "input": 3}, "page": "video_set", "body": "#video_d out1 matrix=2"},
+    {"call": "set_route", "args": {"output": 2, "input": 1}, "page": "video_set", "body": "#video_d out2 matrix=0"},
+    {"call": "set_output_power", "args": {"output": 2, "on": false}, "page": "video_set", "body": "#video_d out2 onoff=0"},
+    {"call": "set_output_power", "args": {"output": 1, "on": true}, "page": "video_set", "body": "#video_d out1 onoff=1"},
+    {"call": "rename", "args": {"kind": "in", "index": 1, "name": "AppleTv"}, "page": "video_set", "body": "#port in1 name=AppleTv"},
+    {"call": "rename", "args": {"kind": "out", "index": 2, "name": "Right_TV"}, "page": "video_set", "body": "#port out2 name=Right_TV"},
+    {"call": "set_edid", "args": {"input": 4, "preset": 15}, "page": "edid_set", "body": "#edid_d in4 data=15"},
+    {"call": "set_audio", "args": {"mode": "arc", "value": 1}, "page": "audio_set", "body": "#audio_d arc=1"},
+    {"call": "set_audio", "args": {"mode": "extraction", "value": 2}, "page": "audio_set", "body": "#audio_d dec=2"},
+    {"call": "set_network", "args": {"ip": "192.168.1.10", "mask": "255.255.255.0", "gw": "192.168.1.1"}, "page": "ip.set", "body": "#ip ip=192.168.1.10 mask=255.255.255.0 gw=192.168.1.1"},
+    {"call": "set_credentials", "args": {"user": "admin1", "password": "secret1"}, "page": "system_set", "body": "#register0 id=admin1 psd=secret1"},
+    {"call": "reboot", "args": {}, "page": "system_set", "body": "#power start=1"},
+    {"call": "factory_reset", "args": {}, "page": "system_set", "body": "#factory0"}
+  ],
+  "rejections": [
+    {"call": "set_route", "args": {"output": 3, "input": 1}},
+    {"call": "set_route", "args": {"output": 1, "input": 5}},
+    {"call": "set_route", "args": {"output": 1, "input": 0}},
+    {"call": "set_output_power", "args": {"output": 0, "on": true}},
+    {"call": "rename", "args": {"kind": "in", "index": 1, "name": "x"}},
+    {"call": "rename", "args": {"kind": "in", "index": 1, "name": "Apple TV"}},
+    {"call": "rename", "args": {"kind": "in", "index": 1, "name": "A_name_that_is_too_long"}},
+    {"call": "set_edid", "args": {"input": 5, "preset": 0}},
+    {"call": "set_edid", "args": {"input": 1, "preset": 99}},
+    {"call": "set_audio", "args": {"mode": "arc", "value": 3}},
+    {"call": "set_credentials", "args": {"user": "adm", "password": "secret1"}},
+    {"call": "set_credentials", "args": {"user": "admin1", "password": "bad pass"}}
+  ]
+}
