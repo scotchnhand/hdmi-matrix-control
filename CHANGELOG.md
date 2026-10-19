@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.3.0](https://github.com/scotchnhand/hdmi-matrix-control/compare/v1.2.1...v1.3.0) (2026-10-19)
+
+
+### Features
+
+* **web-app:** liquid-glass styling for the web UI ([#64](https://github.com/scotchnhand/hdmi-matrix-control/issues/64)) ([b55a656](https://github.com/scotchnhand/hdmi-matrix-control/commit/b55a656f291662b9b4116cf83c63b59958d0be87))
+
+
+### Bug Fixes
+
+* **protocol:** validate network, port index and group before building device commands ([#58](https://github.com/scotchnhand/hdmi-matrix-control/issues/58)) ([cb039f5](https://github.com/scotchnhand/hdmi-matrix-control/commit/cb039f538c10405720900dc5615888bb00c12aac))
+* resolve open reliability and accessibility issues ([#66](https://github.com/scotchnhand/hdmi-matrix-control/issues/66)) ([5ebe37e](https://github.com/scotchnhand/hdmi-matrix-control/commit/5ebe37ec62d217be50a50d2409082d373c819126))
+
 ## [1.2.1](https://github.com/scotchnhand/hdmi-matrix-control/compare/v1.2.0...v1.2.1) (2026-10-18)
 
 
