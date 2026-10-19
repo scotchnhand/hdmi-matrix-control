@@ -84,6 +84,13 @@ with no settings lost. Both `matrix_client.py` implementations serialize
 all requests to the device (a single lock around every call) specifically
 to minimize triggering this.
 
+The device can also forget its login state after an external reboot or power
+cycle while continuing to accept HTTP connections. Each Python client treats
+a malformed state response as session loss, logs in once, and retries that
+same read once. A second malformed response is returned as an error; transport
+failures do not trigger an extra login attempt. The Swift client follows the
+same one-retry policy.
+
 ## The web app's `/api/*` layer
 
 `hdmi-matrix-ui/backend/server.py` exposes a clean JSON API that wraps the
@@ -104,6 +111,12 @@ protocol above — this is what `frontend/app.js` actually calls:
 
 Every POST returns the fresh aggregated state (same shape as `/api/state`)
 so the frontend never has to guess at the result of an action.
+
+The web backend coalesces `/api/state` reads from multiple browser tabs for a
+short TTL and invalidates that cache after a successful command. This reduces
+load within one backend process, but it cannot coordinate independent HA, iOS,
+and web-backend processes; deployments should prefer one direct poller when
+the hardware is under load.
 
 ## Home Assistant entities
 

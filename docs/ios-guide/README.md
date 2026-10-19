@@ -105,13 +105,14 @@ on its own. Pull down on the list to refresh immediately.
 ## 5. Turning outputs on and off
 
 Use the switch at the top right of an output's card to turn that HDMI
-output on or off. While an output is off its inputs are greyed out and
-can't be tapped, and the card tells you why:
+output on or off. While an output is off its inputs are dimmed, but you can
+still pre-select a source; the choice takes effect when the output turns on.
+The card tells you that the output is in standby:
 
 ![The Right output switched off](images/03-output-power-off.png)
 
-Turn it back on to choose sources again. The matrix remembers which
-input was selected.
+Turn it back on and the matrix uses the source you selected. This lets you
+prepare a route before powering the display.
 
 ## 6. Audio: ARC and extraction
 

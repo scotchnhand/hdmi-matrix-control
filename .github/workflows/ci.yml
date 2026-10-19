@@ -98,6 +98,12 @@ jobs:
         run: |
           python3 - <<'PY'
           import json, re, sys
+          ios_versions = set(re.findall(
+              r"MARKETING_VERSION = ([0-9.]+);", open("ios-app/HDMIMatrix.xcodeproj/project.pbxproj").read()
+          ))
+          if len(ios_versions) != 1:
+              print("::error::iOS MARKETING_VERSION differs between build configurations.")
+              sys.exit(1)
           versions = {
               ".release-please-manifest.json": json.load(open(".release-please-manifest.json"))["."],
               "version.txt": open("version.txt").read().strip(),
@@ -105,6 +111,10 @@ jobs:
               "web-app version.py": re.search(
                   r'__version__ = "([^"]+)"', open("hdmi-matrix-ui/backend/version.py").read()
               ).group(1),
+              "service-worker APP_VERSION": re.search(
+                  r"APP_VERSION = '([^']+)'", open("hdmi-matrix-ui/frontend/sw.js").read()
+              ).group(1),
+              "iOS MARKETING_VERSION": ios_versions.pop(),
           }
           for name, version in versions.items():
               print(f"{name}: {version}")

@@ -15,11 +15,11 @@ from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, UPDATE_INTERVAL_SECONDS
-from .matrix_client import MatrixClient, MatrixError
+from .matrix_client import MatrixAuthError, MatrixClient, MatrixError
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
@@ -41,6 +41,8 @@ class MatrixCoordinator(DataUpdateCoordinator[dict]):
     async def _async_update_data(self) -> dict:
         try:
             return await self.hass.async_add_executor_job(self.client.get_state)
+        except MatrixAuthError as err:
+            raise ConfigEntryAuthFailed(str(err)) from err
         except MatrixError as err:
             raise UpdateFailed(str(err)) from err
 

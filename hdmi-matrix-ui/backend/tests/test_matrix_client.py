@@ -134,6 +134,35 @@ class TestGetState(unittest.TestCase):
         self.assertEqual(state["device"]["ip"], "192.168.17.238")
         self.assertEqual(len(state["edid_presets"]), len(EDID_PRESETS))
 
+    def test_malformed_response_relogs_and_retries_once(self):
+        client = make_client()
+        client._logged_in = True
+        responses = iter(["<html>login</html>", REAL_LOGIN_OK, REAL_VIDEO_RESPONSE])
+        with patch.object(client, "_request", side_effect=lambda *args: next(responses)) as request:
+            video = client.get_video()
+
+        self.assertEqual(video["in1"], "Windows")
+        self.assertEqual(request.call_count, 3)
+
+    def test_second_malformed_response_raises_without_looping(self):
+        client = make_client()
+        client._logged_in = True
+        responses = iter(["junk", REAL_LOGIN_OK, "junk"])
+        with patch.object(client, "_request", side_effect=lambda *args: next(responses)) as request:
+            with self.assertRaises(MatrixError):
+                client.get_video()
+
+        self.assertEqual(request.call_count, 3)
+
+    def test_transport_error_does_not_trigger_relogin(self):
+        client = make_client()
+        client._logged_in = True
+        with patch.object(client, "_request", side_effect=MatrixError("unreachable")) as request:
+            with self.assertRaises(MatrixError):
+                client.get_video()
+
+        request.assert_called_once_with("GET", "video.get")
+
 
 class TestCommandValidation(unittest.TestCase):
     """Every public setter validates before touching the network, so these

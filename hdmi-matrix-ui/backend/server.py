@@ -19,7 +19,10 @@ from __future__ import annotations
 import hmac
 import json
 import mimetypes
+import os
 import socket
+import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
@@ -29,6 +32,7 @@ from matrix_client import MatrixClient, MatrixError
 from version import __version__
 
 FRONTEND_DIR = (Path(__file__).parent.parent / "frontend").resolve()
+MAX_BODY_BYTES = 16 * 1024
 
 config = load_config()
 if config["matrix_host"] == "mock":
@@ -42,15 +46,49 @@ else:
     )
 
 
+class StateCache:
+    """Coalesce state reads from all browser tabs in this backend process."""
+
+    def __init__(self, matrix_client, ttl: float = 2.5):
+        self._client = matrix_client
+        self._ttl = ttl
+        self._lock = threading.Lock()
+        self._value = None
+        self._at = 0.0
+
+    def get(self):
+        with self._lock:
+            if self._value is None or time.monotonic() - self._at > self._ttl:
+                self._value = self._client.get_state()
+                self._at = time.monotonic()
+            return self._value
+
+    def invalidate(self):
+        with self._lock:
+            self._value = None
+
+
+state_cache = StateCache(client)
+
+
 def json_body(handler: BaseHTTPRequestHandler) -> dict:
-    length = int(handler.headers.get("Content-Length", 0))
+    raw_length = handler.headers.get("Content-Length", "0")
+    try:
+        length = int(raw_length)
+    except ValueError as exc:
+        raise MatrixError("Invalid Content-Length") from exc
+    if length < 0 or length > MAX_BODY_BYTES:
+        raise MatrixError("Request body too large or invalid length")
     if length == 0:
         return {}
     raw = handler.rfile.read(length)
     try:
-        return json.loads(raw.decode("utf-8"))
-    except json.JSONDecodeError as exc:
+        body = json.loads(raw.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
         raise MatrixError(f"Invalid JSON body: {exc}") from exc
+    if not isinstance(body, dict):
+        raise MatrixError("JSON body must be an object")
+    return body
 
 
 def _is_json(handler: BaseHTTPRequestHandler) -> bool:
@@ -143,7 +181,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = urlparse(self.path).path
         if path == "/api/state":
-            self._handle(lambda: client.get_state())
+            self._handle(state_cache.get)
             return
         self._serve_static(path)
 
@@ -179,7 +217,8 @@ class Handler(BaseHTTPRequestHandler):
 
         def run():
             action()
-            return client.get_state()
+            state_cache.invalidate()
+            return state_cache.get()
 
         self._handle(run)
 
@@ -198,15 +237,32 @@ class Handler(BaseHTTPRequestHandler):
         print(f"[hdmi-matrix-ui] {self.address_string()} - {format % args}")
 
 
+def detect_lan_ip() -> str | None:
+    """Best-effort outbound interface IP for the startup help text."""
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+            # UDP connect selects a route; it does not send a packet.
+            sock.connect(("10.255.255.255", 1))
+            ip = sock.getsockname()[0]
+            return None if ip.startswith("127.") else ip
+    except OSError:
+        return None
+
+
 def main():
     host = config["listen_host"]
     port = config["listen_port"]
     httpd = ThreadingHTTPServer((host, port), Handler)
 
-    lan_ip = socket.gethostbyname(socket.gethostname())
     print(f"HDMI Matrix UI {__version__} serving on:")
     print(f"  http://localhost:{port}")
-    print(f"  http://{lan_ip}:{port}  (use this from your phone/tablet on the same network)")
+    lan_ip = detect_lan_ip()
+    if lan_ip:
+        print(f"  http://{lan_ip}:{port}  (use this from your phone/tablet on the same network)")
+    else:
+        print("  (could not detect LAN IP -- use this machine's address on your network)")
+    if os.path.exists("/.dockerenv"):
+        print("  Running in Docker: use the HOST's IP and the published port.")
     print(f"Proxying to matrix at http://{config['matrix_host']}")
     try:
         httpd.serve_forever()

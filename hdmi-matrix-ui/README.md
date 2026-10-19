@@ -102,8 +102,9 @@ server) can lock up its web server under rapid or concurrent requests —
 it happened once while reverse-engineering the protocol for this project.
 If the UI shows "Connection lost" and stays that way, power-cycle the
 matrix (unplug/replug); no settings are lost, it's just the HTTP listener
-recovering. The backend already serializes all requests to the device to
-minimize this.
+recovering. The backend serializes device requests and shares a short-lived
+state cache across open browser tabs. HA and iOS still poll directly in their
+own processes, so run one direct poller when possible.
 
 ## Project layout
 

@@ -30,9 +30,9 @@ One HA device ("HDMI Matrix") with:
   (e.g. `Left`). The `source` attribute shows the input currently routed
   to that output — i.e. what you'll actually hear.
 - **`text.input_1_name` … `text.output_2_name`** — rename ports (3–15
-  letters, numbers, or underscores, the device's own rule). Names must be
-  unique within inputs / outputs, since the selects above use them as
-  options. Renaming changes those options but never any entity IDs.
+  letters, numbers, or underscores, the device's own rule). Names are
+  disambiguated in select options if another client creates duplicates, and
+  renaming never changes entity IDs.
 - **`select.<input>_edid`** — EDID profile per input (resolution/HDR/
   channel-count presets), as a `config`-category entity.
 - **`button.reboot`** — restart the matrix.
@@ -63,6 +63,18 @@ cadence the matrix's own UI uses.
    matrix's own web UI (default `admin` / `admin`).
 
 No YAML required — this is a native config-flow integration.
+
+## Changing the password or IP
+
+If the matrix password changes, Home Assistant raises a reauthentication
+flow. Open the repair/configuration prompt and enter the current username and
+password; the existing entity IDs are preserved. If the matrix receives a
+new DHCP address or is factory-reset, use the integration's **Reconfigure**
+action to update its host without deleting and re-adding the device.
+
+The integration also provides a diagnostics download with credentials and
+device account fields redacted. Attach that file to an issue when reporting a
+problem; do not paste the raw matrix response or configuration file.
 
 ## Notes
 

@@ -17,6 +17,21 @@ if TYPE_CHECKING:
 AUDIO_OFF = "Off"
 
 
+def _port_labels(ports: list[dict], reserved: set[str] | frozenset[str] = frozenset()) -> dict[int, str]:
+    """Return stable, unambiguous option labels keyed by port index."""
+    counts: dict[str, int] = {}
+    for port in ports:
+        counts[port["name"]] = counts.get(port["name"], 0) + 1
+    return {
+        port["index"]: (
+            f"{port['name']} ({port['index']})"
+            if counts[port["name"]] > 1 or port["name"] in reserved
+            else port["name"]
+        )
+        for port in ports
+    }
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: MatrixConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -53,8 +68,9 @@ class MatrixRouteSelect(MatrixEntity, SelectEntity):
     def _output(self) -> dict:
         return next(o for o in self.coordinator.data["outputs"] if o["index"] == self._output_index)
 
-    def _input_by_name(self, name: str) -> dict | None:
-        return next((i for i in self.coordinator.data["inputs"] if i["name"] == name), None)
+    def _input_by_option(self, option: str) -> dict | None:
+        labels = _port_labels(self.coordinator.data["inputs"])
+        return next((i for i in self.coordinator.data["inputs"] if labels[i["index"]] == option), None)
 
     @property
     def name(self) -> str:
@@ -62,16 +78,17 @@ class MatrixRouteSelect(MatrixEntity, SelectEntity):
 
     @property
     def options(self) -> list[str]:
-        return [i["name"] for i in self.coordinator.data["inputs"]]
+        labels = _port_labels(self.coordinator.data["inputs"])
+        return [labels[i["index"]] for i in self.coordinator.data["inputs"]]
 
     @property
     def current_option(self) -> str | None:
         output = self._output()
         matched = next((i for i in self.coordinator.data["inputs"] if i["index"] == output["input_index"]), None)
-        return matched["name"] if matched else None
+        return _port_labels(self.coordinator.data["inputs"]).get(matched["index"]) if matched else None
 
     async def async_select_option(self, option: str) -> None:
-        target = self._input_by_name(option)
+        target = self._input_by_option(option)
         if target is None:
             raise ServiceValidationError(f"Unknown input: {option}")
         await self.coordinator.async_set_route(self._output_index, target["index"])
@@ -141,7 +158,8 @@ class MatrixAudioSelect(MatrixEntity, SelectEntity):
 
     @property
     def options(self) -> list[str]:
-        return [AUDIO_OFF, *(o["name"] for o in self.coordinator.data["outputs"])]
+        labels = _port_labels(self.coordinator.data["outputs"], {AUDIO_OFF})
+        return [AUDIO_OFF, *(labels[o["index"]] for o in self.coordinator.data["outputs"])]
 
     @property
     def current_option(self) -> str | None:
@@ -149,7 +167,7 @@ class MatrixAudioSelect(MatrixEntity, SelectEntity):
         if value == 0:
             return AUDIO_OFF
         output = self._output(value)
-        return output["name"] if output else None
+        return _port_labels(self.coordinator.data["outputs"], {AUDIO_OFF}).get(output["index"]) if output else None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -164,7 +182,8 @@ class MatrixAudioSelect(MatrixEntity, SelectEntity):
         if option == AUDIO_OFF:
             value = 0
         else:
-            output = next((o for o in self.coordinator.data["outputs"] if o["name"] == option), None)
+            labels = _port_labels(self.coordinator.data["outputs"], {AUDIO_OFF})
+            output = next((o for o in self.coordinator.data["outputs"] if labels[o["index"]] == option), None)
             if output is None:
                 raise ServiceValidationError(f"Unknown audio source: {option}")
             value = output["index"]
