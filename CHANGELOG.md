@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/scotchnhand/hdmi-matrix-control/compare/v1.3.0...v1.4.0) (2026-10-20)
+
+
+### Features
+
+* **web-app:** show current version and release updates ([#67](https://github.com/scotchnhand/hdmi-matrix-control/issues/67)) ([41adc7d](https://github.com/scotchnhand/hdmi-matrix-control/commit/41adc7d98b9562803e5f130669d195c4d9960415))
+
 ## [1.3.0](https://github.com/scotchnhand/hdmi-matrix-control/compare/v1.2.1...v1.3.0) (2026-10-19)
 
 
