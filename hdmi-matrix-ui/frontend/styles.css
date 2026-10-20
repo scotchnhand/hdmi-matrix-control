@@ -265,6 +265,46 @@ button {
   padding-top: var(--space-5);
 }
 
+/* ---------- App footer ---------- */
+.app-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-4) var(--space-5) calc(var(--space-4) + env(safe-area-inset-bottom));
+  color: var(--text-dim);
+  font-size: 12px;
+  text-align: center;
+}
+
+.app-footer__update::before {
+  content: "·";
+  margin-right: var(--space-2);
+}
+
+.app-footer a,
+.app-footer__check {
+  color: var(--accent);
+  font: inherit;
+}
+
+.app-footer__check {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.app-footer__check:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.app-footer [hidden] {
+  display: none;
+}
+
 .card {
   background: var(--glass-surface);
   border: 1px solid var(--glass-border);

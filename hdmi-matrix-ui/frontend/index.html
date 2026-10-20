@@ -146,6 +146,13 @@
     </section>
 
   </main>
+
+  <footer class="app-footer" aria-label="Application version">
+    <span id="appVersion">Running version: …</span>
+    <span class="app-footer__update" id="updateStatus" role="status" aria-live="polite">Checking for updates…</span>
+    <a id="releaseLink" href="https://github.com/scotchnhand/hdmi-matrix-control/releases/latest" target="_blank" rel="noopener" hidden>View release</a>
+    <button class="app-footer__check" id="checkUpdates" type="button">Check again</button>
+  </footer>
 </div>
 
 <div class="modal" id="renameModal" hidden>
