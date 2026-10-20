@@ -131,14 +131,19 @@ class MatrixClient:
         if data is not None:
             req.add_header("Content-Type", "charset=UTF-8")
             req.add_header("ISAJAX", "yes")
-        try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
-                return resp.read().decode("utf-8", errors="replace")
-        # URLError covers refused/unresolvable hosts, but a read that times out
-        # (how this device fails when it locks up) raises a bare TimeoutError,
-        # and a dropped connection an http.client error -- treat all as "unreachable".
-        except (OSError, http.client.HTTPException) as exc:
-            raise MatrixError(f"Could not reach matrix at {self.base}: {exc}") from exc
+        for attempt in range(2):
+            try:
+                with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+                    return resp.read().decode("utf-8", errors="replace")
+            # Retry only a POST refused before connecting. Timeouts and dropped
+            # sockets may happen after the device has applied the command.
+            except (OSError, http.client.HTTPException) as exc:
+                reason = getattr(exc, "reason", None)
+                refused = isinstance(exc, ConnectionRefusedError) or isinstance(reason, ConnectionRefusedError)
+                if method == "POST" and attempt == 0 and refused:
+                    time.sleep(0.25)
+                    continue
+                raise MatrixError(f"Could not reach matrix at {self.base}: {exc}") from exc
 
     @staticmethod
     def _parse_jsonp(text: str, fn_name: str) -> dict:
