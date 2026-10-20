@@ -265,6 +265,31 @@ button {
   padding-top: var(--space-5);
 }
 
+.update-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  color: var(--text);
+  background: var(--accent-surface);
+  border-bottom: 1px solid var(--glass-border-strong);
+  font-size: 14px;
+}
+
+.update-banner[hidden] { display: none; }
+.update-banner a { color: var(--accent); font-weight: 600; }
+.update-banner__dismiss {
+  padding: 0 var(--space-2);
+  border: 0;
+  color: var(--text-dim);
+  background: transparent;
+  font: inherit;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
 /* ---------- App footer ---------- */
 .app-footer {
   display: flex;

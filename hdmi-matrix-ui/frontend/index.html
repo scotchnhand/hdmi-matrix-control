@@ -29,6 +29,12 @@
     </button>
   </header>
 
+  <div class="update-banner" id="updateBanner" role="status" aria-live="polite" hidden>
+    <span id="updateBannerText">A new version is available.</span>
+    <a id="updateBannerLink" href="https://github.com/scotchnhand/hdmi-matrix-control/releases/latest" target="_blank" rel="noopener">View release</a>
+    <button class="update-banner__dismiss" id="dismissUpdateBanner" type="button" aria-label="Dismiss update notification">×</button>
+  </div>
+
   <main class="content">
 
     <section class="card" aria-labelledby="routingHeading">

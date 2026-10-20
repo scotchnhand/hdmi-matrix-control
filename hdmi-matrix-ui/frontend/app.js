@@ -29,6 +29,10 @@ const el = {
   updateStatus: document.getElementById('updateStatus'),
   releaseLink: document.getElementById('releaseLink'),
   checkUpdates: document.getElementById('checkUpdates'),
+  updateBanner: document.getElementById('updateBanner'),
+  updateBannerText: document.getElementById('updateBannerText'),
+  updateBannerLink: document.getElementById('updateBannerLink'),
+  dismissUpdateBanner: document.getElementById('dismissUpdateBanner'),
 };
 
 let state = null;
@@ -93,6 +97,7 @@ async function api(path, options) {
 const RELEASES_API = 'https://api.github.com/repos/scotchnhand/hdmi-matrix-control/releases/latest';
 const RELEASE_PAGE = 'https://github.com/scotchnhand/hdmi-matrix-control/releases/latest';
 let runningVersion = '';
+let dismissedUpdateVersion = '';
 
 function versionParts(version) {
   const match = String(version).trim().replace(/^v/i, '').match(/^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?/);
@@ -124,11 +129,18 @@ async function checkForUpdates() {
     const release = await response.json();
     if (release.draft || release.prerelease || !release.tag_name) throw new Error('No stable release found');
     if (isNewerVersion(release.tag_name, runningVersion)) {
-      el.updateStatus.textContent = `Version ${release.tag_name.replace(/^v/i, '')} is available.`;
-      el.releaseLink.href = release.html_url || RELEASE_PAGE;
+      const availableVersion = release.tag_name.replace(/^v/i, '');
+      const releaseUrl = release.html_url || RELEASE_PAGE;
+      el.updateStatus.textContent = `Version ${availableVersion} is available.`;
+      el.releaseLink.href = releaseUrl;
       el.releaseLink.hidden = false;
+      el.updateBannerText.textContent = `Version ${availableVersion} is available.`;
+      el.updateBannerLink.href = releaseUrl;
+      el.updateBanner.hidden = dismissedUpdateVersion === availableVersion;
+      el.updateBanner.dataset.version = availableVersion;
     } else {
       el.updateStatus.textContent = 'You’re up to date.';
+      el.updateBanner.hidden = true;
     }
   } catch (error) {
     el.updateStatus.textContent = 'Update check unavailable.';
@@ -138,6 +150,10 @@ async function checkForUpdates() {
 }
 
 el.checkUpdates.addEventListener('click', checkForUpdates);
+el.dismissUpdateBanner.addEventListener('click', () => {
+  dismissedUpdateVersion = el.updateBanner.dataset.version || '';
+  el.updateBanner.hidden = true;
+});
 checkForUpdates();
 
 async function fetchState() {
