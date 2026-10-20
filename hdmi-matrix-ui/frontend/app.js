@@ -25,6 +25,10 @@ const el = {
   renameForm: document.getElementById('renameForm'),
   renameInput: document.getElementById('renameInput'),
   toast: document.getElementById('toast'),
+  appVersion: document.getElementById('appVersion'),
+  updateStatus: document.getElementById('updateStatus'),
+  releaseLink: document.getElementById('releaseLink'),
+  checkUpdates: document.getElementById('checkUpdates'),
 };
 
 let state = null;
@@ -83,6 +87,58 @@ async function api(path, options) {
   }
   return body;
 }
+
+// ---------- application updates ----------
+
+const RELEASES_API = 'https://api.github.com/repos/scotchnhand/hdmi-matrix-control/releases/latest';
+const RELEASE_PAGE = 'https://github.com/scotchnhand/hdmi-matrix-control/releases/latest';
+let runningVersion = '';
+
+function versionParts(version) {
+  const match = String(version).trim().replace(/^v/i, '').match(/^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?/);
+  return match ? [Number(match[1]), Number(match[2]), Number(match[3]), match[4] || ''] : null;
+}
+
+function isNewerVersion(latest, running) {
+  const latestParts = versionParts(latest);
+  const runningParts = versionParts(running);
+  if (!latestParts || !runningParts) return false;
+  for (let i = 0; i < 3; i += 1) {
+    if (latestParts[i] !== runningParts[i]) return latestParts[i] > runningParts[i];
+  }
+  return Boolean(runningParts[3]) && !latestParts[3];
+}
+
+async function checkForUpdates() {
+  el.checkUpdates.disabled = true;
+  el.updateStatus.textContent = 'Checking for updates…';
+  el.releaseLink.hidden = true;
+  try {
+    if (!runningVersion) {
+      const versionInfo = await api('/api/version');
+      runningVersion = versionInfo.version;
+      el.appVersion.textContent = `Running version: ${runningVersion}`;
+    }
+    const response = await fetch(RELEASES_API, { headers: { Accept: 'application/vnd.github+json' }, cache: 'no-store' });
+    if (!response.ok) throw new Error(`GitHub returned ${response.status}`);
+    const release = await response.json();
+    if (release.draft || release.prerelease || !release.tag_name) throw new Error('No stable release found');
+    if (isNewerVersion(release.tag_name, runningVersion)) {
+      el.updateStatus.textContent = `Version ${release.tag_name.replace(/^v/i, '')} is available.`;
+      el.releaseLink.href = release.html_url || RELEASE_PAGE;
+      el.releaseLink.hidden = false;
+    } else {
+      el.updateStatus.textContent = 'You’re up to date.';
+    }
+  } catch (error) {
+    el.updateStatus.textContent = 'Update check unavailable.';
+  } finally {
+    el.checkUpdates.disabled = false;
+  }
+}
+
+el.checkUpdates.addEventListener('click', checkForUpdates);
+checkForUpdates();
 
 async function fetchState() {
   return api('/api/state');

@@ -180,6 +180,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = urlparse(self.path).path
+        if path == "/api/version":
+            self._send_json({"version": __version__})
+            return
         if path == "/api/state":
             self._handle(state_cache.get)
             return

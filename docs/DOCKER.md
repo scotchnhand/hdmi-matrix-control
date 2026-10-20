@@ -67,6 +67,7 @@ ghcr.io/scotchnhand/hdmi-matrix-control
 | Tag | Meaning |
 |---|---|
 | `latest` | Newest release. Moves on every release. |
+| `dev` | Latest image built from the `dev` branch. May change at any time. |
 | `1.2` | Newest patch release of 1.2.x. |
 | `1.2.0` | One exact release. Never changes. |
 
