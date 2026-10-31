@@ -1,10 +1,11 @@
 name: CI
 
 on:
+  workflow_call: {}
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
   workflow_dispatch: {}
 
 permissions:
@@ -139,12 +140,29 @@ jobs:
       - name: Smoke test against the demo matrix
         run: |
           docker run -d --name ui -e MATRIX_HOST=mock -p 8765:8765 hdmi-matrix-ui:ci
-          for i in $(seq 1 20); do
-            curl -fsS http://localhost:8765/api/state && exit 0
+          ready=0
+          for i in $(seq 1 40); do
+            health=$(docker inspect --format '{{.State.Health.Status}}' ui 2>/dev/null || true)
+            if [ "$health" = "healthy" ]; then
+              ready=1
+              break
+            fi
+            if [ "$health" = "unhealthy" ]; then
+              break
+            fi
             sleep 1
           done
-          docker logs ui
-          exit 1
+          if [ "$ready" -ne 1 ]; then
+            docker logs ui
+            exit 1
+          fi
+          for path in / /app.js /styles.css /manifest.json /icons/icon.svg /sw.js; do
+            curl -fsS -o /dev/null "http://localhost:8765$path"
+          done
+          curl -fsS http://localhost:8765/api/state -o /dev/null
+          version=$(curl -fsS http://localhost:8765/api/version)
+          python3 -c 'import json,sys; assert json.loads(sys.argv[1]).get("version")' "$version"
+          echo "Frontend assets and backend API responded successfully."
 
   hassfest:
     name: Validate HA manifest (hassfest)
