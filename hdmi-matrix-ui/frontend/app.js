@@ -97,55 +97,66 @@ async function api(path, options) {
 // ---------- application updates ----------
 
 const RELEASES_API = 'https://api.github.com/repos/scotchnhand/hdmi-matrix-control/releases/latest';
-const RELEASE_PAGE = 'https://github.com/scotchnhand/hdmi-matrix-control/releases/latest';
-let runningVersion = '';
-let dismissedUpdateVersion = '';
+const DEV_WORKFLOW_RUNS_API = 'https://api.github.com/repos/scotchnhand/hdmi-matrix-control/actions/workflows/dev-image.yml/runs?branch=dev&status=success&per_page=1';
+const updateCheck = window.HdmiMatrixUpdateCheck;
+let dismissedUpdateKey = '';
 
-function versionParts(version) {
-  const match = String(version).trim().replace(/^v/i, '').match(/^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?/);
-  return match ? [Number(match[1]), Number(match[2]), Number(match[3]), match[4] || ''] : null;
+function updateIdentity(build) {
+  const identifier = build.channel === 'dev' ? build.revision : build.version;
+  return `${build.channel}:${identifier}`;
 }
 
-function isNewerVersion(latest, running) {
-  const latestParts = versionParts(latest);
-  const runningParts = versionParts(running);
-  if (!latestParts || !runningParts) return false;
-  for (let i = 0; i < 3; i += 1) {
-    if (latestParts[i] !== runningParts[i]) return latestParts[i] > runningParts[i];
-  }
-  return Boolean(runningParts[3]) && !latestParts[3];
+function displayUpdateResult(build, result) {
+  el.updateStatus.textContent = result.label;
+  const available = result.state === 'available';
+  el.releaseLink.hidden = !available;
+  el.updateBanner.hidden = !available;
+  if (!available) return;
+
+  const linkLabel = build.channel === 'dev' ? 'View dev image' : 'View release';
+  el.releaseLink.href = result.url;
+  el.releaseLink.textContent = linkLabel;
+  el.updateBannerText.textContent = result.label;
+  el.updateBannerLink.href = result.url;
+  el.updateBannerLink.textContent = linkLabel;
+  const key = updateIdentity(build);
+  el.updateBanner.dataset.key = key;
+  el.updateBanner.hidden = dismissedUpdateKey === key;
 }
 
 async function checkForUpdates() {
   el.checkUpdates.disabled = true;
   el.updateStatus.textContent = 'Checking for updates…';
   el.releaseLink.hidden = true;
+  el.updateBanner.hidden = true;
   try {
-    if (!runningVersion) {
-      const versionInfo = await api('/api/version');
-      runningVersion = versionInfo.version;
-      el.appVersion.textContent = `Running version: ${runningVersion}`;
+    const build = await api('/api/version');
+    if (!build || !build.version || !build.channel || !build.revision) {
+      throw new Error('Build metadata is incomplete');
     }
-    const response = await fetch(RELEASES_API, { headers: { Accept: 'application/vnd.github+json' }, cache: 'no-store' });
-    if (!response.ok) throw new Error(`GitHub returned ${response.status}`);
-    const release = await response.json();
-    if (release.draft || release.prerelease || !release.tag_name) throw new Error('No stable release found');
-    if (isNewerVersion(release.tag_name, runningVersion)) {
-      const availableVersion = release.tag_name.replace(/^v/i, '');
-      const releaseUrl = release.html_url || RELEASE_PAGE;
-      el.updateStatus.textContent = `Version ${availableVersion} is available.`;
-      el.releaseLink.href = releaseUrl;
-      el.releaseLink.hidden = false;
-      el.updateBannerText.textContent = `Version ${availableVersion} is available.`;
-      el.updateBannerLink.href = releaseUrl;
-      el.updateBanner.hidden = dismissedUpdateVersion === availableVersion;
-      el.updateBanner.dataset.version = availableVersion;
+    el.appVersion.textContent = `Running ${build.channel} build: ${build.version}`;
+
+    let result;
+    if (build.channel === 'stable') {
+      const response = await fetch(RELEASES_API, {
+        headers: { Accept: 'application/vnd.github+json' },
+        cache: 'no-store',
+      });
+      if (!response.ok) throw new Error(`GitHub returned ${response.status}`);
+      result = updateCheck.evaluateStableUpdate(build.version, await response.json());
+    } else if (build.channel === 'dev') {
+      const response = await fetch(DEV_WORKFLOW_RUNS_API, {
+        headers: { Accept: 'application/vnd.github+json' },
+        cache: 'no-store',
+      });
+      if (!response.ok) throw new Error(`GitHub returned ${response.status}`);
+      result = updateCheck.evaluateDevUpdate(build.revision, await response.json());
     } else {
-      el.updateStatus.textContent = 'No newer stable release found. This check does not track dev images.';
-      el.updateBanner.hidden = true;
+      result = updateCheck.unavailableUpdate();
     }
+    displayUpdateResult(build, result);
   } catch (error) {
-    el.updateStatus.textContent = 'Update check unavailable.';
+    displayUpdateResult(null, updateCheck.unavailableUpdate());
   } finally {
     el.checkUpdates.disabled = false;
   }
@@ -153,7 +164,7 @@ async function checkForUpdates() {
 
 el.checkUpdates.addEventListener('click', checkForUpdates);
 el.dismissUpdateBanner.addEventListener('click', () => {
-  dismissedUpdateVersion = el.updateBanner.dataset.version || '';
+  dismissedUpdateKey = el.updateBanner.dataset.key || '';
   el.updateBanner.hidden = true;
 });
 checkForUpdates();
