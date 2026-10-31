@@ -87,6 +87,11 @@ The image:
   never polls the matrix, whose embedded web server is fragile;
 - stops cleanly on `docker stop`.
 
+Published images report their build channel and commit revision at
+`/api/version`. The image build inserts that revision into the service-worker
+shell cache key, so each published commit gets a fresh app shell even while
+the mutable `dev` tag stays the same.
+
 ## Configuration
 
 Configure the container with environment variables:
@@ -97,8 +102,15 @@ Configure the container with environment variables:
 | `MATRIX_USERNAME` | No | `admin` | Matrix web login username. |
 | `MATRIX_PASSWORD` | No | `admin` | Matrix web login password. |
 | `API_TOKEN` | No | *(empty)* | If set, control requests must send a matching `X-API-Token` header. The web app asks for it once per browser. See [Security](#security). Available in releases after 1.2.0. |
+| `TRUSTED_HOSTS` | No | *(empty)* | Comma-separated exact hostnames allowed for browser control requests, such as `matrix.local` or `matrix.home.example`. Do not include schemes or ports. |
 | `LISTEN_PORT` | No | `8765` | Port inside the container. Leave it alone and change the *published* port instead. |
 | `LISTEN_HOST` | No | `0.0.0.0` | Bind address inside the container. Leave it alone. |
+
+Private IPv4, loopback IPv4, loopback IPv6, and IPv6 unique-local addresses
+are allowed without a hostname entry. Browser access through a hostname,
+including `.local` and reverse-proxy names, requires that exact name in
+`TRUSTED_HOSTS`. In a mounted config file, use a JSON array such as
+`"trusted_hosts": ["matrix.local", "matrix.home.example"]`.
 
 To use a different port on the host, change only the left side of the port
 mapping, for example `-p 8080:8765`.
@@ -129,6 +141,15 @@ Things to know:
   `listen_port` in the file have no effect in Docker.
 - The container runs as an unprivileged user, so the file must be
   world-readable (`chmod 644 config.json`).
+
+### After changing matrix network or password settings
+
+The web app applies an accepted network or password change to its running
+matrix client. To keep it working after the container restarts, update the
+matching `MATRIX_HOST`, `MATRIX_USERNAME`, and `MATRIX_PASSWORD` environment
+values, or the `matrix_host`, `matrix_username`, and `matrix_password` fields
+in the mounted `config.json`, then recreate the container. The app does not
+write credentials submitted in the web form to Docker settings or config files.
 
 ### Demo mode
 
@@ -417,9 +438,10 @@ nginx, for example to serve it over HTTPS at `https://matrix.home.example`.
 
 > [!IMPORTANT]
 > The proxy must **pass the original `Host` header** through. The app
-> rejects control requests whose `Origin` doesn't match `Host` (this blocks
-> cross-site request forgery), so a proxy that rewrites `Host` makes every
-> button fail with **403 Cross-origin request rejected**.
+> checks that `Origin` matches `Host` and requires the hostname to be listed
+> in `TRUSTED_HOSTS`. A proxy that rewrites `Host`, or a hostname missing
+> from `TRUSTED_HOSTS`, makes control requests fail with **403 Cross-origin
+> request rejected**.
 
 Nginx Proxy Manager, Traefik, and Caddy pass `Host` through by default.
 For plain nginx, set it explicitly:
@@ -458,8 +480,9 @@ if only Traefik should reach it):
   access, use a VPN (WireGuard, Tailscale) or a reverse proxy that adds
   real authentication.
 - **CSRF protection is built in.** Control requests must be JSON and
-  same-origin, so a malicious web page can't send commands through your
-  browser.
+  same-origin. Private and loopback IP addresses are allowed by default;
+  browser hostnames need an exact `TRUSTED_HOSTS` entry, which blocks
+  DNS-rebinding hostnames.
 - **Optional API token.** Set `API_TOKEN` to require an `X-API-Token`
   header on every control request. The web app asks for the token once
   and remembers it in that browser. Reading state doesn't need it. This
@@ -515,8 +538,9 @@ The container can't reach the matrix.
 
 ### Buttons fail with "Cross-origin request rejected" (403)
 
-A reverse proxy is changing the `Host` header. See
-[Behind a reverse proxy](#behind-a-reverse-proxy).
+A reverse proxy may be changing the `Host` header, or its hostname may be
+missing from `TRUSTED_HOSTS`. See [Behind a reverse proxy](#behind-a-reverse-proxy)
+and [Configuration](#configuration).
 
 ### Buttons fail with "Missing or invalid API token" (401)
 

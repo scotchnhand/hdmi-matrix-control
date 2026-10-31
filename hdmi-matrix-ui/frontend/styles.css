@@ -348,6 +348,14 @@ button {
   color: var(--text-dim);
 }
 
+.setting-notice {
+  padding: var(--space-3);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--accent-surface);
+  font-size: 13px;
+}
+
 /* ---------- Routing ---------- */
 .routing-grid {
   display: flex;

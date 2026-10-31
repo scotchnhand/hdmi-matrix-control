@@ -82,6 +82,31 @@ class ServerTestCase(unittest.TestCase):
         self.assertIn("audio", body)
         self.assertIn("edid_presets", body)
 
+    def test_version_endpoint_includes_build_channel_and_revision(self):
+        with patch.object(server_module, "BUILD_CHANNEL", "dev", create=True), patch.object(
+            server_module, "BUILD_REVISION", "abc123", create=True
+        ):
+            status, body = self._get("/api/version")
+
+        self.assertEqual(status, 200)
+        self.assertEqual(
+            body,
+            {"version": server_module.__version__, "channel": "dev", "revision": "abc123"},
+        )
+
+    def test_service_worker_cache_key_includes_build_revision_placeholder(self):
+        service_worker = (server_module.FRONTEND_DIR / "sw.js").read_text()
+
+        self.assertIn(
+            "const CACHE_NAME = `hdmi-matrix-shell-${APP_VERSION}-__APP_BUILD_REVISION__-2`;",
+            service_worker,
+        )
+
+    def test_service_worker_shell_caches_update_check_helper(self):
+        service_worker = (server_module.FRONTEND_DIR / "sw.js").read_text()
+
+        self.assertIn("'/update-check.js'", service_worker)
+
     def test_route_command_updates_state(self):
         status, body = self._post("/api/route", {"output": 1, "input": 2})
         self.assertEqual(status, 200)
@@ -129,6 +154,48 @@ class ServerTestCase(unittest.TestCase):
         factory_reset.assert_called_once_with()
         get_state.assert_not_called()
 
+    def test_network_change_acknowledges_without_followup_state_poll(self):
+        payload = {"ip": "192.168.1.10", "mask": "255.255.255.0", "gw": "192.168.1.1"}
+        with patch.object(server_module.client, "set_network") as set_network, patch.object(
+            server_module.state_cache,
+            "get",
+            side_effect=server_module.MatrixError("matrix disconnected after network change"),
+        ) as get_state:
+            status, body = self._post("/api/network", payload)
+
+        self.assertEqual(status, 200)
+        self.assertEqual(body, {"ok": True, "settings_changed": "network"})
+        set_network.assert_called_once_with(payload["ip"], payload["mask"], payload["gw"])
+        get_state.assert_not_called()
+
+    def test_password_change_acknowledges_without_followup_state_poll(self):
+        payload = {"user": "new_admin", "password": "new_secret"}
+        with patch.object(server_module.client, "set_password") as set_password, patch.object(
+            server_module.state_cache,
+            "get",
+            side_effect=server_module.MatrixError("matrix login changed after password update"),
+        ) as get_state:
+            status, body = self._post("/api/system/password", payload)
+
+        self.assertEqual(status, 200)
+        self.assertEqual(body, {"ok": True, "settings_changed": "password"})
+        self.assertNotIn("new_secret", json.dumps(body))
+        set_password.assert_called_once_with("new_admin", "new_secret")
+        get_state.assert_not_called()
+
+    def test_network_change_acknowledgement_keeps_matrix_rejection_as_error(self):
+        with patch.object(
+            server_module.client, "set_network", side_effect=server_module.MatrixError("device rejected change")
+        ) as set_network:
+            status, body = self._post(
+                "/api/network",
+                {"ip": "192.168.1.10", "mask": "255.255.255.0", "gw": "192.168.1.1"},
+            )
+
+        self.assertEqual(status, 502)
+        self.assertEqual(body, {"error": "device rejected change"})
+        set_network.assert_called_once()
+
     def test_rename_rejects_invalid_name(self):
         status, body = self._post("/api/rename", {"kind": "in", "index": 1, "name": "x"})
         self.assertEqual(status, 502)  # MatrixError from rename_port's validation
@@ -164,6 +231,82 @@ class ServerTestCase(unittest.TestCase):
         status = self._raw_post("/api/system/reboot", headers={
             "Content-Type": "application/json", "Origin": f"http://{host}:1"})
         self.assertEqual(status, 403)
+
+    def test_origin_matching_untrusted_hostname_is_rejected(self):
+        port = self.httpd.server_address[1]
+        hostname = "rebind.attacker.example"
+        host = f"{hostname}:{port}"
+        status = self._raw_post("/api/route", json.dumps({"output": 1, "input": 1}).encode(), headers={
+            "Content-Type": "application/json", "Host": host, "Origin": f"http://{host}"})
+        self.assertEqual(status, 403)
+
+    def test_origin_matching_private_and_loopback_ip_literals_is_allowed(self):
+        port = self.httpd.server_address[1]
+        for address in ("10.2.3.4", "127.0.0.1", "[::1]", "[fd12:3456::1]"):
+            with self.subTest(address=address):
+                host = f"{address}:{port}"
+                status = self._raw_post("/api/route", json.dumps({"output": 1, "input": 1}).encode(), headers={
+                    "Content-Type": "application/json", "Host": host, "Origin": f"http://{host}"})
+                self.assertEqual(status, 200)
+
+    def test_origin_matching_public_ip_is_rejected(self):
+        port = self.httpd.server_address[1]
+        host = f"8.8.8.8:{port}"
+        status = self._raw_post("/api/route", json.dumps({"output": 1, "input": 1}).encode(), headers={
+            "Content-Type": "application/json", "Host": host, "Origin": f"http://{host}"})
+        self.assertEqual(status, 403)
+
+    def test_origin_matching_exact_trusted_hostname_is_allowed(self):
+        port = self.httpd.server_address[1]
+        with patch.dict(server_module.config, {"trusted_hosts": ["matrix.local"]}):
+            trusted_host = f"matrix.local:{port}"
+            trusted_status = self._raw_post(
+                "/api/route", json.dumps({"output": 1, "input": 1}).encode(), headers={
+                    "Content-Type": "application/json", "Host": trusted_host,
+                    "Origin": f"http://{trusted_host}",
+                }
+            )
+            subdomain = f"sub.matrix.local:{port}"
+            subdomain_status = self._raw_post(
+                "/api/route", json.dumps({"output": 1, "input": 1}).encode(), headers={
+                    "Content-Type": "application/json", "Host": subdomain,
+                    "Origin": f"http://{subdomain}",
+                }
+            )
+        self.assertEqual(trusted_status, 200)
+        self.assertEqual(subdomain_status, 403)
+
+    def test_malformed_and_unsupported_origins_are_rejected(self):
+        port = self.httpd.server_address[1]
+        host = f"127.0.0.1:{port}"
+        origins = (
+            "null",
+            f"\x00http://{host}",
+            "http://",
+            f"ftp://{host}",
+            f"http://user@{host}",
+            f"http://{host}/path",
+            f"http://{host}?query=1",
+            f"http://{host}?",
+            f"http://{host}#fragment",
+            f"http://{host}#",
+            f"http://{host}:notaport",
+            "http://127.0.0.1:",
+        )
+        for origin in origins:
+            with self.subTest(origin=origin):
+                status = self._raw_post("/api/route", json.dumps({"output": 1, "input": 1}).encode(), headers={
+                    "Content-Type": "application/json", "Host": host, "Origin": origin})
+                self.assertEqual(status, 403)
+
+    def test_malformed_host_authorities_are_rejected(self):
+        port = self.httpd.server_address[1]
+        valid_origin = f"http://127.0.0.1:{port}"
+        for host in (f"127.0.0.1:{port}?", f"127.0.0.1:{port}#"):
+            with self.subTest(host=host):
+                status = self._raw_post("/api/route", json.dumps({"output": 1, "input": 1}).encode(), headers={
+                    "Content-Type": "application/json", "Host": host, "Origin": valid_origin})
+                self.assertEqual(status, 403)
 
     def test_same_origin_post_is_allowed(self):
         host = self.base_url.removeprefix("http://")

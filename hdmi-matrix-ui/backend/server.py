@@ -17,15 +17,17 @@ and browsing to it from phones/tablets/laptops sidesteps that.
 from __future__ import annotations
 
 import hmac
+import ipaddress
 import json
 import mimetypes
 import os
+import re
 import socket
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlsplit
 
 from config import load_config
 from matrix_client import MatrixClient, MatrixError
@@ -33,6 +35,12 @@ from version import __version__
 
 FRONTEND_DIR = (Path(__file__).parent.parent / "frontend").resolve()
 MAX_BODY_BYTES = 16 * 1024
+BUILD_CHANNEL = os.environ.get("APP_BUILD_CHANNEL") or "stable"
+BUILD_REVISION = os.environ.get("APP_BUILD_REVISION") or "local"
+TRUSTED_IPV4_NETWORKS = tuple(
+    ipaddress.ip_network(network) for network in ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16")
+)
+TRUSTED_IPV6_NETWORK = ipaddress.ip_network("fc00::/7")
 
 config = load_config()
 if config["matrix_host"] == "mock":
@@ -97,17 +105,111 @@ def _is_json(handler: BaseHTTPRequestHandler) -> bool:
 
 
 def _origin_allowed(handler: BaseHTTPRequestHandler) -> bool:
-    """Same-origin check against the Host header.
+    """Allow same-origin control requests only for local IPs or trusted names.
 
     Requests without an Origin header (curl, scripts, Home Assistant) are
     allowed: browsers always send Origin on cross-origin POSTs, so its
-    absence means the request didn't come from a hostile web page.
+    absence means the request didn't come from a hostile web page. Hostnames
+    are exact allowlist entries to prevent DNS rebinding.
     """
-    origin = handler.headers.get("Origin")
-    if origin is None:
+    origins = handler.headers.get_all("Origin", [])
+    if not origins:
         return True
-    host = handler.headers.get("Host", "")
-    return urlparse(origin).netloc.lower() == host.lower()
+    if len(origins) != 1:
+        return False
+    origin = origins[0]
+    hosts = handler.headers.get_all("Host", [])
+    if len(hosts) != 1:
+        return False
+    host_header = hosts[0]
+    if (
+        not origin
+        or not host_header
+        or any(
+            char.isspace() or ord(char) < 0x20 or ord(char) == 0x7F
+            for char in origin + host_header
+        )
+        or "?" in origin
+        or "#" in origin
+        or "?" in host_header
+        or "#" in host_header
+    ):
+        return False
+
+    try:
+        origin_parts = urlsplit(origin)
+        if (
+            origin_parts.scheme.lower() not in ("http", "https")
+            or not origin_parts.netloc
+            or origin_parts.netloc.endswith(":")
+            or origin_parts.username is not None
+            or origin_parts.password is not None
+            or origin_parts.path
+            or origin_parts.query
+            or origin_parts.fragment
+        ):
+            return False
+        origin_hostname = origin_parts.hostname
+        origin_port = origin_parts.port
+
+        host_parts = urlsplit(f"//{host_header}")
+        if (
+            not host_parts.netloc
+            or host_parts.netloc.endswith(":")
+            or host_parts.username is not None
+            or host_parts.password is not None
+            or host_parts.path
+            or host_parts.query
+            or host_parts.fragment
+        ):
+            return False
+        host_name = host_parts.hostname
+        host_port = host_parts.port
+    except ValueError:
+        return False
+
+    origin_name = _normalize_request_host(origin_hostname)
+    request_name = _normalize_request_host(host_name)
+    if origin_name is None or request_name is None or origin_name[0] != request_name[0]:
+        return False
+
+    default_port = 443 if origin_parts.scheme.lower() == "https" else 80
+    origin_effective_port = default_port if origin_port is None else origin_port
+    host_effective_port = default_port if host_port is None else host_port
+    if origin_effective_port != host_effective_port:
+        return False
+
+    address = origin_name[1]
+    if address is not None:
+        if address.is_loopback:
+            return True
+        if address.version == 4:
+            return any(address in network for network in TRUSTED_IPV4_NETWORKS)
+        return address in TRUSTED_IPV6_NETWORK
+
+    return origin_name[0] in config.get("trusted_hosts", [])
+
+
+def _normalize_request_host(
+    hostname: str | None,
+) -> tuple[str, ipaddress.IPv4Address | ipaddress.IPv6Address | None] | None:
+    if not hostname or "%" in hostname:
+        return None
+    try:
+        address = ipaddress.ip_address(hostname)
+        return address.compressed.lower(), address
+    except ValueError:
+        pass
+    try:
+        normalized = hostname.rstrip(".").encode("idna").decode("ascii").lower()
+    except UnicodeError:
+        return None
+    if len(normalized) > 253 or any(
+        not re.fullmatch(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?", label)
+        for label in normalized.split(".")
+    ):
+        return None
+    return normalized, None
 
 
 def _token_ok(handler: BaseHTTPRequestHandler) -> bool:
@@ -181,7 +283,11 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = urlparse(self.path).path
         if path == "/api/version":
-            self._send_json({"version": __version__})
+            self._send_json({
+                "version": __version__,
+                "channel": BUILD_CHANNEL,
+                "revision": BUILD_REVISION,
+            })
             return
         if path == "/api/state":
             self._handle(state_cache.get)
@@ -223,6 +329,10 @@ class Handler(BaseHTTPRequestHandler):
             state_cache.invalidate()
             if path in ("/api/system/reboot", "/api/system/factory-reset"):
                 return {"ok": True}
+            if path == "/api/network":
+                return {"ok": True, "settings_changed": "network"}
+            if path == "/api/system/password":
+                return {"ok": True, "settings_changed": "password"}
             return state_cache.get()
 
         self._handle(run)

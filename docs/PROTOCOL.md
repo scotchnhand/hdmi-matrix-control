@@ -104,13 +104,18 @@ protocol above — this is what `frontend/app.js` actually calls:
 | `/api/rename` | POST | `{kind: "in"\|"out", index, name}` | New state |
 | `/api/edid` | POST | `{input, preset}` | New state |
 | `/api/audio` | POST | `{mode: "arc"\|"extraction", value}` | New state |
-| `/api/network` | POST | `{ip, mask, gw}` | New state |
-| `/api/system/reboot` | POST | — | New state |
-| `/api/system/factory-reset` | POST | — | New state |
-| `/api/system/password` | POST | `{user, password}` | New state |
+| `/api/network` | POST | `{ip, mask, gw}` | `{"ok": true, "settings_changed": "network"}` |
+| `/api/system/reboot` | POST | — | `{"ok": true}` |
+| `/api/system/factory-reset` | POST | — | `{"ok": true}` |
+| `/api/system/password` | POST | `{user, password}` | `{"ok": true, "settings_changed": "password"}` |
 
-Every POST returns the fresh aggregated state (same shape as `/api/state`)
-so the frontend never has to guess at the result of an action.
+Most state-changing POST routes return the fresh aggregated state (same
+shape as `/api/state`). Network and password changes return acknowledgements
+because the matrix may drop its connection or login while applying those
+settings. Reboot and factory reset also acknowledge command acceptance
+without an immediate state read because the matrix may be restarting or may
+have reset its network settings. The next `/api/state` read uses the updated
+runtime settings for network and password changes.
 
 The web backend coalesces `/api/state` reads from multiple browser tabs for a
 short TTL and invalidates that cache after a successful command. This reduces

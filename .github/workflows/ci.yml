@@ -1,10 +1,11 @@
 name: CI
 
 on:
+  workflow_call: {}
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
   workflow_dispatch: {}
 
 permissions:
@@ -139,12 +140,31 @@ jobs:
       - name: Smoke test against the demo matrix
         run: |
           docker run -d --name ui -e MATRIX_HOST=mock -p 8765:8765 hdmi-matrix-ui:ci
-          for i in $(seq 1 20); do
-            curl -fsS http://localhost:8765/api/state && exit 0
+          ready=0
+          for i in $(seq 1 40); do
+            health=$(docker inspect --format '{{.State.Health.Status}}' ui 2>/dev/null || true)
+            if [ "$health" = "healthy" ]; then
+              ready=1
+              break
+            fi
+            if [ "$health" = "unhealthy" ]; then
+              break
+            fi
             sleep 1
           done
-          docker logs ui
-          exit 1
+          if [ "$ready" -ne 1 ]; then
+            docker logs ui
+            exit 1
+          fi
+          for path in / /app.js /update-check.js /styles.css /manifest.json /icons/icon.svg /sw.js; do
+            curl -fsS -o /dev/null "http://localhost:8765$path"
+          done
+          curl -fsS http://localhost:8765/api/state -o /dev/null
+          version=$(curl -fsS http://localhost:8765/api/version)
+          python3 -c 'import json,sys; data=json.loads(sys.argv[1]); assert all(data.get(key) for key in ("version", "channel", "revision"))' "$version"
+          revision=$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["revision"])' "$version")
+          curl -fsS http://localhost:8765/sw.js | grep -F -- "$revision" >/dev/null
+          echo "Frontend assets and backend API responded successfully."
 
   hassfest:
     name: Validate HA manifest (hassfest)
@@ -167,6 +187,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+      - name: Test channel-aware update decisions
+        run: node --test hdmi-matrix-ui/frontend/tests/update-check.test.js
       - name: Validate JSON (manifest.json etc.)
         run: |
           set -e

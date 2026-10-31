@@ -278,5 +278,46 @@ class TestInputValidation(unittest.TestCase):
         self.assert_rejected(lambda: self.client.set_password("admin1", "secret1", group="1"))
 
 
+class TestRuntimeSettingUpdates(unittest.TestCase):
+    def setUp(self):
+        self.client = make_client()
+        self.client._logged_in = True
+
+    def test_network_updates_runtime_base_after_request_succeeds(self):
+        with patch.object(self.client, "_request") as request:
+            self.client.set_network("192.168.1.10", "255.255.255.0", "192.168.1.1")
+
+        self.assertEqual(self.client.base, "http://192.168.1.10")
+        request.assert_called_once_with(
+            "POST", "ip.set", "#ip ip=192.168.1.10 mask=255.255.255.0 gw=192.168.1.1"
+        )
+
+    def test_network_updates_leave_runtime_base_unchanged_when_request_fails(self):
+        with patch.object(self.client, "_request", side_effect=MatrixError("unreachable")):
+            with self.assertRaises(MatrixError):
+                self.client.set_network("192.168.1.10", "255.255.255.0", "192.168.1.1")
+
+        self.assertEqual(self.client.base, "http://matrix.test")
+        self.assertTrue(self.client._logged_in)
+
+    def test_password_updates_runtime_credentials_after_request_succeeds(self):
+        with patch.object(self.client, "_request") as request:
+            self.client.set_password("new_admin", "new_password")
+
+        self.assertEqual(self.client.username, "new_admin")
+        self.assertEqual(self.client.password, "new_password")
+        self.assertFalse(self.client._logged_in)
+        request.assert_called_once_with("POST", "system_set", "#register0 id=new_admin psd=new_password")
+
+    def test_password_updates_leave_runtime_credentials_unchanged_when_request_fails(self):
+        with patch.object(self.client, "_request", side_effect=MatrixError("unreachable")):
+            with self.assertRaises(MatrixError):
+                self.client.set_password("new_admin", "new_password")
+
+        self.assertEqual(self.client.username, "admin")
+        self.assertEqual(self.client.password, "admin")
+        self.assertTrue(self.client._logged_in)
+
+
 if __name__ == "__main__":
     unittest.main()

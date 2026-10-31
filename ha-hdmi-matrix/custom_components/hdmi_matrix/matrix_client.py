@@ -312,6 +312,7 @@ class MatrixClient:
         with self._lock:
             self._ensure_login()
             self._request("POST", "ip.set", f"#ip ip={ip} mask={mask} gw={gw}")
+            self.base = f"http://{ip}"
 
     def set_password(self, user: str, password: str, group: str = "0") -> None:
         validate_group(group)
@@ -320,3 +321,6 @@ class MatrixClient:
         with self._lock:
             self._ensure_login()
             self._request("POST", "system_set", f"#register{group} id={user} psd={password}")
+            self.username = user
+            self.password = password
+            self._logged_in = False
