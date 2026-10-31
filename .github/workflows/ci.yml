@@ -161,7 +161,9 @@ jobs:
           done
           curl -fsS http://localhost:8765/api/state -o /dev/null
           version=$(curl -fsS http://localhost:8765/api/version)
-          python3 -c 'import json,sys; assert json.loads(sys.argv[1]).get("version")' "$version"
+          python3 -c 'import json,sys; data=json.loads(sys.argv[1]); assert all(data.get(key) for key in ("version", "channel", "revision"))' "$version"
+          revision=$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["revision"])' "$version")
+          curl -fsS http://localhost:8765/sw.js | grep -F -- "$revision" >/dev/null
           echo "Frontend assets and backend API responded successfully."
 
   hassfest:

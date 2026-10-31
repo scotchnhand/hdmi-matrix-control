@@ -87,6 +87,11 @@ The image:
   never polls the matrix, whose embedded web server is fragile;
 - stops cleanly on `docker stop`.
 
+Published images report their build channel and commit revision at
+`/api/version`. The image build inserts that revision into the service-worker
+shell cache key, so each published commit gets a fresh app shell even while
+the mutable `dev` tag stays the same.
+
 ## Configuration
 
 Configure the container with environment variables:

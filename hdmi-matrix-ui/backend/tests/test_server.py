@@ -82,6 +82,26 @@ class ServerTestCase(unittest.TestCase):
         self.assertIn("audio", body)
         self.assertIn("edid_presets", body)
 
+    def test_version_endpoint_includes_build_channel_and_revision(self):
+        with patch.object(server_module, "BUILD_CHANNEL", "dev", create=True), patch.object(
+            server_module, "BUILD_REVISION", "abc123", create=True
+        ):
+            status, body = self._get("/api/version")
+
+        self.assertEqual(status, 200)
+        self.assertEqual(
+            body,
+            {"version": server_module.__version__, "channel": "dev", "revision": "abc123"},
+        )
+
+    def test_service_worker_cache_key_includes_build_revision_placeholder(self):
+        service_worker = (server_module.FRONTEND_DIR / "sw.js").read_text()
+
+        self.assertIn(
+            "const CACHE_NAME = `hdmi-matrix-shell-${APP_VERSION}-__APP_BUILD_REVISION__-2`;",
+            service_worker,
+        )
+
     def test_route_command_updates_state(self):
         status, body = self._post("/api/route", {"output": 1, "input": 2})
         self.assertEqual(status, 200)

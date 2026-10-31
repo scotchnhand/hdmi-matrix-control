@@ -4,14 +4,21 @@
 # /app/backend/config.json. MATRIX_HOST=mock runs the demo matrix.
 FROM python:3.12-slim
 
+ARG APP_BUILD_CHANNEL=stable
+ARG APP_BUILD_REVISION=local
+
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    APP_BUILD_CHANNEL=${APP_BUILD_CHANNEL} \
+    APP_BUILD_REVISION=${APP_BUILD_REVISION} \
     LISTEN_HOST=0.0.0.0 \
     LISTEN_PORT=8765
 
 WORKDIR /app
 COPY backend/ backend/
 COPY frontend/ frontend/
+
+RUN python -c 'from pathlib import Path; import os; path = Path("frontend/sw.js"); path.write_text(path.read_text().replace("__APP_BUILD_REVISION__", os.environ["APP_BUILD_REVISION"]))'
 
 RUN useradd --system --no-create-home matrix
 USER matrix

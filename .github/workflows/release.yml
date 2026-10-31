@@ -92,3 +92,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            APP_BUILD_CHANNEL=stable
+            APP_BUILD_REVISION=${{ github.sha }}

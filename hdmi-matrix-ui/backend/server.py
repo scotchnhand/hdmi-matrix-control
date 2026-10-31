@@ -35,6 +35,8 @@ from version import __version__
 
 FRONTEND_DIR = (Path(__file__).parent.parent / "frontend").resolve()
 MAX_BODY_BYTES = 16 * 1024
+BUILD_CHANNEL = os.environ.get("APP_BUILD_CHANNEL") or "stable"
+BUILD_REVISION = os.environ.get("APP_BUILD_REVISION") or "local"
 TRUSTED_IPV4_NETWORKS = tuple(
     ipaddress.ip_network(network) for network in ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16")
 )
@@ -270,7 +272,11 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = urlparse(self.path).path
         if path == "/api/version":
-            self._send_json({"version": __version__})
+            self._send_json({
+                "version": __version__,
+                "channel": BUILD_CHANNEL,
+                "revision": BUILD_REVISION,
+            })
             return
         if path == "/api/state":
             self._handle(state_cache.get)

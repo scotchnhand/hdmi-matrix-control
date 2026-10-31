@@ -3,7 +3,7 @@
 const APP_VERSION = '1.4.0'; // x-release-please-version
 // Bump the shell revision when frontend assets change outside a release
 // version bump, so installed PWAs replace their cached app shell.
-const CACHE_NAME = `hdmi-matrix-shell-${APP_VERSION}-2`;
+const CACHE_NAME = `hdmi-matrix-shell-${APP_VERSION}-__APP_BUILD_REVISION__-2`;
 const SHELL_FILES = [
   '/',
   '/styles.css',
