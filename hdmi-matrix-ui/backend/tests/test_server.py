@@ -103,6 +103,32 @@ class ServerTestCase(unittest.TestCase):
         # restore for other tests
         self._post("/api/output-power", {"output": 2, "on": True})
 
+    def test_reboot_returns_success_without_followup_state_poll(self):
+        with patch.object(server_module.client, "reboot") as reboot, patch.object(
+            server_module.state_cache,
+            "get",
+            side_effect=server_module.MatrixError("offline"),
+        ) as get_state:
+            status, body = self._post("/api/system/reboot", {})
+
+        self.assertEqual(status, 200)
+        self.assertEqual(body, {"ok": True})
+        reboot.assert_called_once_with()
+        get_state.assert_not_called()
+
+    def test_factory_reset_returns_success_without_followup_state_poll(self):
+        with patch.object(server_module.client, "factory_reset") as factory_reset, patch.object(
+            server_module.state_cache,
+            "get",
+            side_effect=server_module.MatrixError("offline"),
+        ) as get_state:
+            status, body = self._post("/api/system/factory-reset", {})
+
+        self.assertEqual(status, 200)
+        self.assertEqual(body, {"ok": True})
+        factory_reset.assert_called_once_with()
+        get_state.assert_not_called()
+
     def test_rename_rejects_invalid_name(self):
         status, body = self._post("/api/rename", {"kind": "in", "index": 1, "name": "x"})
         self.assertEqual(status, 502)  # MatrixError from rename_port's validation

@@ -139,7 +139,7 @@ async function checkForUpdates() {
       el.updateBanner.hidden = dismissedUpdateVersion === availableVersion;
       el.updateBanner.dataset.version = availableVersion;
     } else {
-      el.updateStatus.textContent = 'You’re up to date.';
+      el.updateStatus.textContent = 'No newer stable release found. This check does not track dev images.';
       el.updateBanner.hidden = true;
     }
   } catch (error) {
