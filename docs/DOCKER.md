@@ -305,6 +305,10 @@ working **Open** button on the dashboard.
 4. Paste the contents of `docker-compose.zimaos.yml`, or upload the file,
    and click **Submit**.
 5. ZimaOS fills in the form. Check these fields:
+   - **Docker Image:** The imported value defaults to
+     `ghcr.io/scotchnhand/hdmi-matrix-control:latest`. To use the dev image,
+     replace the full value with
+     `ghcr.io/scotchnhand/hdmi-matrix-control:dev` before installing.
    - **Environment variables:** set `MATRIX_HOST` to your matrix's IP.
      Change `MATRIX_USERNAME` and `MATRIX_PASSWORD` if you changed the
      matrix login. Leave `API_TOKEN` empty unless you want one.
@@ -323,7 +327,7 @@ working **Open** button on the dashboard.
    | Field | Value |
    |---|---|
    | **Docker Image** | `ghcr.io/scotchnhand/hdmi-matrix-control` |
-   | **Tag** | `latest` or an exact release such as `1.2.0` |
+   | **Tag** | `latest`, `dev`, or an exact release such as `1.2.0` |
    | **Title** | `HDMI Matrix` |
    | **Icon URL** | `https://raw.githubusercontent.com/scotchnhand/hdmi-matrix-control/main/hdmi-matrix-ui/frontend/icons/icon-512.png` |
    | **Web UI** | `http://` · *(leave host blank)* · port `8765` · path `/` |
@@ -337,10 +341,17 @@ working **Open** button on the dashboard.
 
 ### Updating in ZimaOS
 
-ZimaOS doesn't automatically update custom apps. To move to a new release:
+ZimaOS doesn't automatically update custom apps. To move to another release
+or dev build:
 
 1. On the dashboard, open the app tile's **⋮** menu → **Settings**.
-2. Change **Tag** to the new release number (for example `1.2.1`).
+2. Choose the image version:
+   - For an imported Compose app, change **Docker Image** to
+     `ghcr.io/scotchnhand/hdmi-matrix-control:dev`,
+     `ghcr.io/scotchnhand/hdmi-matrix-control:latest`, or a full
+     versioned image such as `ghcr.io/scotchnhand/hdmi-matrix-control:1.2.1`.
+   - For an app created with the manual form, change **Tag** to `dev`,
+     `latest`, or the release number (for example `1.2.1`).
 3. Click **Save**. ZimaOS pulls the new image and recreates the container.
 
 Pinning an exact release tag makes this predictable. With `latest`, saving

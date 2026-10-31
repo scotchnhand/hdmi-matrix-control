@@ -221,6 +221,8 @@ class Handler(BaseHTTPRequestHandler):
         def run():
             action()
             state_cache.invalidate()
+            if path in ("/api/system/reboot", "/api/system/factory-reset"):
+                return {"ok": True}
             return state_cache.get()
 
         self._handle(run)
