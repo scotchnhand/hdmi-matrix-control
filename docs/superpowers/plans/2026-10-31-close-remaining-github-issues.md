@@ -320,7 +320,7 @@ Run the Node tests and syntax check from Task 6, then run `swift test` from `ios
 
 Run `git diff --check` and inspect the full diff. Confirm each issue #75–80 has implementation, focused regression coverage, and documentation/workflow coverage as applicable. Confirm no credentials or unrelated checkout changes are included.
 
-- [ ] **Step 5: Commit the design and implementation plan**
+- [x] **Step 5: Commit the design and implementation plan**
 
 ```bash
 git add docs/superpowers/specs/2026-10-31-close-remaining-github-issues-design.md docs/superpowers/plans/2026-10-31-close-remaining-github-issues.md
