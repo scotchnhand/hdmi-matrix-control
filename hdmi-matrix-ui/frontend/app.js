@@ -5,6 +5,12 @@ const POLL_INTERVAL_MS = 3000;
 const el = {
   connStatus: document.getElementById('connStatus'),
   themeToggle: document.getElementById('themeToggle'),
+  seasonMode: document.getElementById('seasonMode'),
+  seasonRegion: document.getElementById('seasonRegion'),
+  seasonPreview: document.getElementById('seasonPreview'),
+  seasonWinter: document.getElementById('seasonWinter'),
+  winterIncludes: document.getElementById('winterIncludes'),
+  seasonStatus: document.getElementById('seasonStatus'),
   routingGrid: document.getElementById('routingGrid'),
   inputList: document.getElementById('inputList'),
   advancedToggle: document.getElementById('advancedToggle'),
@@ -72,10 +78,82 @@ function toggleTheme() {
   document.documentElement.setAttribute('data-theme', next);
   try { localStorage.setItem('hdmi-matrix-theme', next); } catch (e) { /* private mode, ignore */ }
   updateThemeToggle();
+  applySeason();
 }
 
 el.themeToggle.addEventListener('click', toggleTheme);
 initTheme();
+
+// ---------- seasonal themes (rules and palettes live in seasons.js) ----------
+
+const SEASON_KEY = 'hdmi-matrix-seasons';
+
+function loadSeasonSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SEASON_KEY) || '{}');
+    return saved && typeof saved === 'object' ? saved : {};
+  } catch (e) { return {}; }
+}
+
+function saveSeasonSettings() {
+  try { localStorage.setItem(SEASON_KEY, JSON.stringify(seasonSettings)); } catch (e) { /* private mode, ignore */ }
+}
+
+let seasonSettings = loadSeasonSettings();
+
+function applySeason() {
+  const root = document.documentElement;
+  const theme = Seasons.resolve(new Date(), seasonSettings, Seasons.regionFromLocale(navigator.language));
+  Seasons.CSS_VAR_NAMES.forEach((name) => root.style.removeProperty(name));
+  if (theme) {
+    const vars = Seasons.cssVars(theme, currentTheme());
+    Object.keys(vars).forEach((name) => root.style.setProperty(name, vars[name]));
+    root.setAttribute('data-season', theme.id);
+  } else {
+    root.removeAttribute('data-season');
+  }
+  el.seasonStatus.textContent = theme ? `Showing: ${theme.name}.` : 'No holiday theme is active today.';
+}
+
+function initSeasonControls() {
+  Seasons.listThemes().forEach((t) => {
+    const option = document.createElement('option');
+    option.value = `force:${t.id}`;
+    option.textContent = t.name;
+    el.seasonPreview.appendChild(option);
+  });
+  el.seasonMode.value = seasonSettings.mode || 'auto';
+  el.seasonRegion.value = seasonSettings.region || 'auto';
+  el.seasonMode.addEventListener('change', () => {
+    seasonSettings.mode = el.seasonMode.value;
+    saveSeasonSettings();
+    applySeason();
+  });
+  el.seasonWinter.value = seasonSettings.winter || 'blend';
+  const included = Array.isArray(seasonSettings.winterHolidays) ? seasonSettings.winterHolidays : Seasons.WINTER_IDS;
+  el.winterIncludes.querySelectorAll('input').forEach((box) => { box.checked = included.includes(box.value); });
+  el.seasonWinter.addEventListener('change', () => {
+    seasonSettings.winter = el.seasonWinter.value;
+    saveSeasonSettings();
+    applySeason();
+  });
+  el.winterIncludes.addEventListener('change', () => {
+    seasonSettings.winterHolidays = Array.from(el.winterIncludes.querySelectorAll('input:checked')).map((box) => box.value);
+    saveSeasonSettings();
+    applySeason();
+  });
+  el.seasonRegion.addEventListener('change', () => {
+    seasonSettings.region = el.seasonRegion.value;
+    saveSeasonSettings();
+    applySeason();
+  });
+  applySeason();
+  // Roll over at midnight / after the tab sat in the background.
+  setInterval(applySeason, 30 * 60 * 1000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) applySeason(); });
+}
+
+initSeasonControls();
 
 // ---------- networking ----------
 
