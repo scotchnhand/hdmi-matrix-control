@@ -1,6 +1,6 @@
 // Caches the static app shell so the PWA opens instantly; /api/* is always
 // fetched live (never cached) since it's the whole point of the app.
-const APP_VERSION = '1.3.1'; // x-release-please-version
+const APP_VERSION = '1.4.0'; // x-release-please-version
 // Bump the shell revision when frontend assets change outside a release
 // version bump, so installed PWAs replace their cached app shell.
 const CACHE_NAME = `hdmi-matrix-shell-${APP_VERSION}-2`;
