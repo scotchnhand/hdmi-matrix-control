@@ -125,7 +125,10 @@ def _origin_allowed(handler: BaseHTTPRequestHandler) -> bool:
     if (
         not origin
         or not host_header
-        or any(char.isspace() for char in origin + host_header)
+        or any(
+            char.isspace() or ord(char) < 0x20 or ord(char) == 0x7F
+            for char in origin + host_header
+        )
         or "?" in origin
         or "#" in origin
         or "?" in host_header

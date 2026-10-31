@@ -2,6 +2,9 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { readFileSync } = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
 
 const {
   evaluateStableUpdate,
@@ -132,4 +135,22 @@ test('an API or network failure has an unavailable result', () => {
     label: 'Update check unavailable.',
     url: null,
   });
+});
+
+test('classic browser scripts load together in one global lexical environment', () => {
+  const context = vm.createContext({
+    document: {
+      getElementById() {
+        throw new Error('app.js reached its first DOM lookup');
+      },
+    },
+  });
+  const helperSource = readFileSync(path.join(__dirname, '../update-check.js'), 'utf8');
+  const appSource = readFileSync(path.join(__dirname, '../app.js'), 'utf8');
+
+  new vm.Script(helperSource, { filename: 'update-check.js' }).runInContext(context);
+  assert.throws(
+    () => new vm.Script(appSource, { filename: 'app.js' }).runInContext(context),
+    /app\.js reached its first DOM lookup/
+  );
 });

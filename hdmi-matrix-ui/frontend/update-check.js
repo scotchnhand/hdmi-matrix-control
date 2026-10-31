@@ -78,6 +78,6 @@ function evaluateDevUpdate(runningRevision, workflowRuns) {
   return { state: 'available', label: 'A newer published dev image is available.', url: runUrl };
 }
 
-const updateCheck = { evaluateStableUpdate, evaluateDevUpdate, unavailableUpdate };
-if (typeof module !== 'undefined' && module.exports) module.exports = updateCheck;
-if (typeof globalThis !== 'undefined') globalThis.HdmiMatrixUpdateCheck = updateCheck;
+const updateCheckApi = { evaluateStableUpdate, evaluateDevUpdate, unavailableUpdate };
+if (typeof module !== 'undefined' && module.exports) module.exports = updateCheckApi;
+if (typeof globalThis !== 'undefined') globalThis.HdmiMatrixUpdateCheck = updateCheckApi;

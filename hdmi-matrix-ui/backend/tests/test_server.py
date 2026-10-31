@@ -281,6 +281,7 @@ class ServerTestCase(unittest.TestCase):
         host = f"127.0.0.1:{port}"
         origins = (
             "null",
+            f"\x00http://{host}",
             "http://",
             f"ftp://{host}",
             f"http://user@{host}",
