@@ -207,6 +207,70 @@ class ServerTestCase(unittest.TestCase):
             "Content-Type": "application/json", "Origin": f"http://{host}:1"})
         self.assertEqual(status, 403)
 
+    def test_origin_matching_untrusted_hostname_is_rejected(self):
+        port = self.httpd.server_address[1]
+        hostname = "rebind.attacker.example"
+        host = f"{hostname}:{port}"
+        status = self._raw_post("/api/route", json.dumps({"output": 1, "input": 1}).encode(), headers={
+            "Content-Type": "application/json", "Host": host, "Origin": f"http://{host}"})
+        self.assertEqual(status, 403)
+
+    def test_origin_matching_private_and_loopback_ip_literals_is_allowed(self):
+        port = self.httpd.server_address[1]
+        for address in ("10.2.3.4", "127.0.0.1", "[::1]", "[fd12:3456::1]"):
+            with self.subTest(address=address):
+                host = f"{address}:{port}"
+                status = self._raw_post("/api/route", json.dumps({"output": 1, "input": 1}).encode(), headers={
+                    "Content-Type": "application/json", "Host": host, "Origin": f"http://{host}"})
+                self.assertEqual(status, 200)
+
+    def test_origin_matching_public_ip_is_rejected(self):
+        port = self.httpd.server_address[1]
+        host = f"8.8.8.8:{port}"
+        status = self._raw_post("/api/route", json.dumps({"output": 1, "input": 1}).encode(), headers={
+            "Content-Type": "application/json", "Host": host, "Origin": f"http://{host}"})
+        self.assertEqual(status, 403)
+
+    def test_origin_matching_exact_trusted_hostname_is_allowed(self):
+        port = self.httpd.server_address[1]
+        with patch.dict(server_module.config, {"trusted_hosts": ["matrix.local"]}):
+            trusted_host = f"matrix.local:{port}"
+            trusted_status = self._raw_post(
+                "/api/route", json.dumps({"output": 1, "input": 1}).encode(), headers={
+                    "Content-Type": "application/json", "Host": trusted_host,
+                    "Origin": f"http://{trusted_host}",
+                }
+            )
+            subdomain = f"sub.matrix.local:{port}"
+            subdomain_status = self._raw_post(
+                "/api/route", json.dumps({"output": 1, "input": 1}).encode(), headers={
+                    "Content-Type": "application/json", "Host": subdomain,
+                    "Origin": f"http://{subdomain}",
+                }
+            )
+        self.assertEqual(trusted_status, 200)
+        self.assertEqual(subdomain_status, 403)
+
+    def test_malformed_and_unsupported_origins_are_rejected(self):
+        port = self.httpd.server_address[1]
+        host = f"127.0.0.1:{port}"
+        origins = (
+            "null",
+            "http://",
+            f"ftp://{host}",
+            f"http://user@{host}",
+            f"http://{host}/path",
+            f"http://{host}?query=1",
+            f"http://{host}#fragment",
+            f"http://{host}:notaport",
+            "http://127.0.0.1:",
+        )
+        for origin in origins:
+            with self.subTest(origin=origin):
+                status = self._raw_post("/api/route", json.dumps({"output": 1, "input": 1}).encode(), headers={
+                    "Content-Type": "application/json", "Host": host, "Origin": origin})
+                self.assertEqual(status, 403)
+
     def test_same_origin_post_is_allowed(self):
         host = self.base_url.removeprefix("http://")
         status = self._raw_post("/api/route", json.dumps({"output": 1, "input": 1}).encode(), headers={
