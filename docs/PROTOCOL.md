@@ -104,13 +104,15 @@ protocol above — this is what `frontend/app.js` actually calls:
 | `/api/rename` | POST | `{kind: "in"\|"out", index, name}` | New state |
 | `/api/edid` | POST | `{input, preset}` | New state |
 | `/api/audio` | POST | `{mode: "arc"\|"extraction", value}` | New state |
-| `/api/network` | POST | `{ip, mask, gw}` | New state |
+| `/api/network` | POST | `{ip, mask, gw}` | `{"ok": true, "settings_changed": "network"}` |
 | `/api/system/reboot` | POST | — | New state |
 | `/api/system/factory-reset` | POST | — | New state |
-| `/api/system/password` | POST | `{user, password}` | New state |
+| `/api/system/password` | POST | `{user, password}` | `{"ok": true, "settings_changed": "password"}` |
 
-Every POST returns the fresh aggregated state (same shape as `/api/state`)
-so the frontend never has to guess at the result of an action.
+Ordinary state-changing POST routes return the fresh aggregated state (same
+shape as `/api/state`). Network and password changes return acknowledgements
+instead because the matrix may drop its connection or login while applying
+those settings; the next `/api/state` read uses the updated runtime settings.
 
 The web backend coalesces `/api/state` reads from multiple browser tabs for a
 short TTL and invalidates that cache after a successful command. This reduces

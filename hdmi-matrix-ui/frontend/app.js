@@ -15,10 +15,12 @@ const el = {
   renameInputsList: document.getElementById('renameInputsList'),
   renameOutputsList: document.getElementById('renameOutputsList'),
   networkForm: document.getElementById('networkForm'),
+  networkNotice: document.getElementById('networkNotice'),
   netIp: document.getElementById('netIp'),
   netMask: document.getElementById('netMask'),
   netGw: document.getElementById('netGw'),
   passwordForm: document.getElementById('passwordForm'),
+  passwordNotice: document.getElementById('passwordNotice'),
   rebootBtn: document.getElementById('rebootBtn'),
   factoryResetBtn: document.getElementById('factoryResetBtn'),
   renameModal: document.getElementById('renameModal'),
@@ -216,6 +218,11 @@ function setConnState(mode) {
   el.connStatus.dataset.state = mode;
   const label = el.connStatus.querySelector('.status__label');
   label.textContent = mode === 'ok' ? 'Connected' : mode === 'error' ? 'Connection lost' : 'Connecting…';
+}
+
+function showSettingNotice(element, message) {
+  element.textContent = message;
+  element.hidden = false;
 }
 
 // ---------- toast ----------
@@ -521,7 +528,13 @@ el.networkForm.addEventListener('submit', (e) => {
   const gw = el.netGw.value.trim();
   if (!confirm(`Apply new network settings?\n\nIP: ${ip}\nMask: ${mask}\nGateway: ${gw}\n\nIf these are wrong the matrix may become unreachable.`)) return;
   sendAction('/api/network', { ip, mask, gw })
-    .then(() => showToast('Network settings applied', 'success'))
+    .then(() => {
+      showToast('Network settings applied', 'success');
+      showSettingNotice(
+        el.networkNotice,
+        'Update MATRIX_HOST (or matrix_host in a mounted config.json) to the new IP, then recreate the container.'
+      );
+    })
     .catch(() => {});
 });
 
@@ -532,7 +545,14 @@ el.passwordForm.addEventListener('submit', (e) => {
   const pass2 = document.getElementById('pwPass2').value;
   if (pass1 !== pass2) { showToast('Passwords do not match', 'error'); return; }
   sendAction('/api/system/password', { user, password: pass1 })
-    .then(() => { showToast('Password changed', 'success'); el.passwordForm.reset(); })
+    .then(() => {
+      showToast('Password changed', 'success');
+      el.passwordForm.reset();
+      showSettingNotice(
+        el.passwordNotice,
+        'Update MATRIX_USERNAME and MATRIX_PASSWORD (or matrix_username and matrix_password in a mounted config.json), then recreate the container.'
+      );
+    })
     .catch(() => {});
 });
 

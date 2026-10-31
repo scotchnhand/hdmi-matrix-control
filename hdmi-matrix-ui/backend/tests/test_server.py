@@ -129,6 +129,48 @@ class ServerTestCase(unittest.TestCase):
         factory_reset.assert_called_once_with()
         get_state.assert_not_called()
 
+    def test_network_change_acknowledges_without_followup_state_poll(self):
+        payload = {"ip": "192.168.1.10", "mask": "255.255.255.0", "gw": "192.168.1.1"}
+        with patch.object(server_module.client, "set_network") as set_network, patch.object(
+            server_module.state_cache,
+            "get",
+            side_effect=server_module.MatrixError("matrix disconnected after network change"),
+        ) as get_state:
+            status, body = self._post("/api/network", payload)
+
+        self.assertEqual(status, 200)
+        self.assertEqual(body, {"ok": True, "settings_changed": "network"})
+        set_network.assert_called_once_with(payload["ip"], payload["mask"], payload["gw"])
+        get_state.assert_not_called()
+
+    def test_password_change_acknowledges_without_followup_state_poll(self):
+        payload = {"user": "new_admin", "password": "new_secret"}
+        with patch.object(server_module.client, "set_password") as set_password, patch.object(
+            server_module.state_cache,
+            "get",
+            side_effect=server_module.MatrixError("matrix login changed after password update"),
+        ) as get_state:
+            status, body = self._post("/api/system/password", payload)
+
+        self.assertEqual(status, 200)
+        self.assertEqual(body, {"ok": True, "settings_changed": "password"})
+        self.assertNotIn("new_secret", json.dumps(body))
+        set_password.assert_called_once_with("new_admin", "new_secret")
+        get_state.assert_not_called()
+
+    def test_network_change_acknowledgement_keeps_matrix_rejection_as_error(self):
+        with patch.object(
+            server_module.client, "set_network", side_effect=server_module.MatrixError("device rejected change")
+        ) as set_network:
+            status, body = self._post(
+                "/api/network",
+                {"ip": "192.168.1.10", "mask": "255.255.255.0", "gw": "192.168.1.1"},
+            )
+
+        self.assertEqual(status, 502)
+        self.assertEqual(body, {"error": "device rejected change"})
+        set_network.assert_called_once()
+
     def test_rename_rejects_invalid_name(self):
         status, body = self._post("/api/rename", {"kind": "in", "index": 1, "name": "x"})
         self.assertEqual(status, 502)  # MatrixError from rename_port's validation

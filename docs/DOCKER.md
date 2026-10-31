@@ -130,6 +130,15 @@ Things to know:
 - The container runs as an unprivileged user, so the file must be
   world-readable (`chmod 644 config.json`).
 
+### After changing matrix network or password settings
+
+The web app applies an accepted network or password change to its running
+matrix client. To keep it working after the container restarts, update the
+matching `MATRIX_HOST`, `MATRIX_USERNAME`, and `MATRIX_PASSWORD` environment
+values, or the `matrix_host`, `matrix_username`, and `matrix_password` fields
+in the mounted `config.json`, then recreate the container. The app does not
+write credentials submitted in the web form to Docker settings or config files.
+
 ### Demo mode
 
 `MATRIX_HOST=mock` runs against an in-memory fake matrix. Use it to try the

@@ -223,6 +223,10 @@ class Handler(BaseHTTPRequestHandler):
             state_cache.invalidate()
             if path in ("/api/system/reboot", "/api/system/factory-reset"):
                 return {"ok": True}
+            if path == "/api/network":
+                return {"ok": True, "settings_changed": "network"}
+            if path == "/api/system/password":
+                return {"ok": True, "settings_changed": "password"}
             return state_cache.get()
 
         self._handle(run)
