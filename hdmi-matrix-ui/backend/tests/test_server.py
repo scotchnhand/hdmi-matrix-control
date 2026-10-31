@@ -102,6 +102,11 @@ class ServerTestCase(unittest.TestCase):
             service_worker,
         )
 
+    def test_service_worker_shell_caches_update_check_helper(self):
+        service_worker = (server_module.FRONTEND_DIR / "sw.js").read_text()
+
+        self.assertIn("'/update-check.js'", service_worker)
+
     def test_route_command_updates_state(self):
         status, body = self._post("/api/route", {"output": 1, "input": 2})
         self.assertEqual(status, 200)
@@ -281,7 +286,9 @@ class ServerTestCase(unittest.TestCase):
             f"http://user@{host}",
             f"http://{host}/path",
             f"http://{host}?query=1",
+            f"http://{host}?",
             f"http://{host}#fragment",
+            f"http://{host}#",
             f"http://{host}:notaport",
             "http://127.0.0.1:",
         )
@@ -289,6 +296,15 @@ class ServerTestCase(unittest.TestCase):
             with self.subTest(origin=origin):
                 status = self._raw_post("/api/route", json.dumps({"output": 1, "input": 1}).encode(), headers={
                     "Content-Type": "application/json", "Host": host, "Origin": origin})
+                self.assertEqual(status, 403)
+
+    def test_malformed_host_authorities_are_rejected(self):
+        port = self.httpd.server_address[1]
+        valid_origin = f"http://127.0.0.1:{port}"
+        for host in (f"127.0.0.1:{port}?", f"127.0.0.1:{port}#"):
+            with self.subTest(host=host):
+                status = self._raw_post("/api/route", json.dumps({"output": 1, "input": 1}).encode(), headers={
+                    "Content-Type": "application/json", "Host": host, "Origin": valid_origin})
                 self.assertEqual(status, 403)
 
     def test_same_origin_post_is_allowed(self):

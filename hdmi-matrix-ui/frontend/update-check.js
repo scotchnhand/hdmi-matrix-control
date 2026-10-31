@@ -1,6 +1,5 @@
 'use strict';
 
-const RELEASES_PAGE = 'https://github.com/scotchnhand/hdmi-matrix-control/releases/latest';
 const GIT_SHA_PATTERN = /^[0-9a-f]{40}$/i;
 
 function unavailableUpdate() {
@@ -36,7 +35,7 @@ function githubUrl(value) {
       && (!url.port || url.port === '443')
       ? url.href
       : null;
-  } catch (error) {
+  } catch {
     return null;
   }
 }

@@ -122,7 +122,15 @@ def _origin_allowed(handler: BaseHTTPRequestHandler) -> bool:
     if len(hosts) != 1:
         return False
     host_header = hosts[0]
-    if not origin or not host_header or any(char.isspace() for char in origin + host_header):
+    if (
+        not origin
+        or not host_header
+        or any(char.isspace() for char in origin + host_header)
+        or "?" in origin
+        or "#" in origin
+        or "?" in host_header
+        or "#" in host_header
+    ):
         return False
 
     try:

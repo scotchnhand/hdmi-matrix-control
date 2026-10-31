@@ -8,6 +8,7 @@ const SHELL_FILES = [
   '/',
   '/styles.css',
   '/app.js',
+  '/update-check.js',
   '/manifest.json',
   '/icons/icon.svg',
 ];
