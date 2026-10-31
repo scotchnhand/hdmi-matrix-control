@@ -347,7 +347,8 @@ or dev build:
 1. On the dashboard, open the app tile's **⋮** menu → **Settings**.
 2. Choose the image version:
    - For an imported Compose app, change **Docker Image** to
-     `ghcr.io/scotchnhand/hdmi-matrix-control:dev`, `:latest`, or a full
+     `ghcr.io/scotchnhand/hdmi-matrix-control:dev`,
+     `ghcr.io/scotchnhand/hdmi-matrix-control:latest`, or a full
      versioned image such as `ghcr.io/scotchnhand/hdmi-matrix-control:1.2.1`.
    - For an app created with the manual form, change **Tag** to `dev`,
      `latest`, or the release number (for example `1.2.1`).
