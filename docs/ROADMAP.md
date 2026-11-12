@@ -34,6 +34,13 @@ these are welcome — see [DEVELOPMENT.md](DEVELOPMENT.md).
       Swift package tested against the same captured device responses
 - [ ] Test against the real device (Local Network permission prompt,
       `matrix.local` resolution, behaviour after a matrix reboot)
+- [x] Tolerate the matrix's slow or dropped connections: "Connection
+      lost" only after 3 failed polls, one read retry, fast first-contact
+      failure, and plain-language errors on the connecting screen
+      ([design](superpowers/specs/2026-10-31-ios-connection-resilience-design.md))
+- [ ] Show the last known state while reconnecting (#95)
+- [ ] Detect missing Wi-Fi or Local Network permission before contacting
+      the matrix (#96)
 - [ ] Bonjour discovery of the matrix instead of typing its host
 - [ ] Home Screen widget / Control Center control for one-tap routing
       presets (App Intents)

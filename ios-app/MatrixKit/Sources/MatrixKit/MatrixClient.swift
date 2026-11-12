@@ -14,7 +14,12 @@ public actor MatrixClient: MatrixService {
     private let username: String
     private let password: String
     private let transport: Transport
+    private let timeout: TimeInterval
+    private let firstContactTimeout: TimeInterval
     private var loggedIn = false
+    /// True once any request has succeeded. Until then a wrong address is
+    /// the likelier problem than a slow device, so we fail fast.
+    private var hasConnected = false
     private var tail: Task<Void, Never>?
 
     /// Reduce whatever the user typed to a bare host (and optional port):
@@ -38,11 +43,14 @@ public actor MatrixClient: MatrixService {
         username: String = "admin",
         password: String = "admin",
         timeout: TimeInterval = 4,
+        firstContactTimeout: TimeInterval = 2,
         transport: Transport? = nil
     ) {
         self.host = Self.normalizeHost(host) ?? host
         self.username = username
         self.password = password
+        self.timeout = timeout
+        self.firstContactTimeout = min(firstContactTimeout, timeout)
         self.transport = transport ?? Self.urlSessionTransport(timeout: timeout)
     }
 
@@ -70,17 +78,52 @@ public actor MatrixClient: MatrixService {
         }
         var req = URLRequest(url: url)
         req.httpMethod = method
+        req.timeoutInterval = hasConnected ? timeout : firstContactTimeout
         if let body {
             req.httpBody = Data(body.utf8)
             req.setValue("charset=UTF-8", forHTTPHeaderField: "Content-Type")
             req.setValue("yes", forHTTPHeaderField: "ISAJAX")
         }
         do {
-            return try await transport(req)
+            do {
+                let text = try await transport(req)
+                hasConnected = true
+                return text
+            } catch let error as URLError where hasConnected && method == "GET" && Self.isTransient(error) {
+                // The device may have closed an idle keep-alive connection
+                // behind our back. Reads are idempotent, so retry once.
+                return try await transport(req)
+            }
         } catch let error as MatrixError {
             throw error
         } catch {
-            throw MatrixError("Could not reach matrix at \(host): \(error.localizedDescription)", isConnectivity: true)
+            throw MatrixError(Self.describe(error, host: host), isConnectivity: true)
+        }
+    }
+
+    private static func isTransient(_ error: URLError) -> Bool {
+        switch error.code {
+        case .networkConnectionLost, .timedOut, .cannotConnectToHost: true
+        default: false
+        }
+    }
+
+    /// A plain-language explanation instead of the raw URLSession text.
+    private static func describe(_ error: Error, host: String) -> String {
+        guard let code = (error as? URLError)?.code else {
+            return "Could not reach matrix at \(host): \(error.localizedDescription)"
+        }
+        switch code {
+        case .timedOut:
+            return "The matrix at \(host) is slow to respond. It may be busy; it will keep retrying."
+        case .networkConnectionLost:
+            return "The matrix at \(host) dropped the connection. It will keep retrying."
+        case .cannotConnectToHost, .cannotFindHost:
+            return "Can't find a matrix at \(host). Check the address in Settings."
+        case .notConnectedToInternet:
+            return "This device isn't on Wi-Fi. Connect to the same network as the matrix."
+        default:
+            return "Could not reach matrix at \(host): \(error.localizedDescription)"
         }
     }
 

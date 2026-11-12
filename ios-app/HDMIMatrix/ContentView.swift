@@ -116,7 +116,26 @@ struct StateGate<Content: View>: View {
                 Text("Connecting to \(settings.demoMode ? "the demo matrix" : settings.host)…")
                     .font(.headline)
                     .foregroundStyle(.secondary)
+                // Once an attempt has failed, say why and offer a way out
+                // instead of leaving an unchanging spinner.
+                if let error = store.lastError, store.consecutiveFailures > 0 {
+                    VStack(spacing: 12) {
+                        Text(error)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                        Text("Retrying… attempt \(store.consecutiveFailures + 1)")
+                            .font(.footnote)
+                            .foregroundStyle(.tertiary)
+                        Button("Connection Settings") { showingSettings = true }
+                            .buttonStyle(.glass)
+                    }
+                    .padding(.horizontal)
+                    .transition(.opacity)
+                }
             }
+            .animation(.default, value: store.consecutiveFailures)
+            .accessibilityElement(children: .contain)
         }
     }
 }

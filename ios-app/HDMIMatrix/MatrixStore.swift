@@ -14,6 +14,8 @@ final class MatrixStore {
     }
 
     static let pollInterval: Duration = .seconds(3)
+    /// Consecutive failed polls before the UI reports "Connection lost".
+    static let failuresBeforeLost = 3
 
     private(set) var state: MatrixState?
     private(set) var connection: Connection = .connecting
@@ -32,6 +34,11 @@ final class MatrixStore {
     /// While the device is expected to be offline (rebooting, changing IP),
     /// failed polls show "Connecting…" instead of "Connection lost".
     private var expectOfflineUntil: ContinuousClock.Instant?
+    /// Failed polls in a row; reset by any successful read.
+    private(set) var consecutiveFailures = 0
+    /// The most recent poll error while still retrying, so the connecting
+    /// screen can explain the delay. Cleared by a successful read.
+    private(set) var lastError: String?
 
     var isBusy: Bool { pendingActions > 0 }
 
@@ -50,6 +57,8 @@ final class MatrixStore {
         pollTask?.cancel()
         generation += 1
         state = nil
+        consecutiveFailures = 0
+        lastError = nil
         connection = .connecting
         // expectOfflineUntil deliberately survives a reconnect: after an IP
         // change we reconnect to the new address while the device moves.
@@ -71,12 +80,19 @@ final class MatrixStore {
             guard generation == self.generation, !isBusy else { return }
             state = next
             connection = .connected
+            consecutiveFailures = 0
+            lastError = nil
             expectOfflineUntil = nil
         } catch {
             guard generation == self.generation else { return }
+            consecutiveFailures += 1
+            lastError = error.localizedDescription
             if let until = expectOfflineUntil, ContinuousClock.now < until {
                 connection = .connecting
-            } else {
+            } else if consecutiveFailures >= Self.failuresBeforeLost {
+                // A single slow or dropped response is common with the
+                // device's embedded server; only report a loss once it
+                // persists, and keep showing the last known state until then.
                 connection = .lost(error.localizedDescription)
             }
         }
