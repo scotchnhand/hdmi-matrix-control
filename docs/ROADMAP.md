@@ -75,6 +75,24 @@ exactly that.
 
 ### Web app
 
+### Seasonal themes (issue #88)
+
+Rules: Halloween = all of October; every other holiday = a 14-day lead-in through
+its last day; the holiday you're inside wins, otherwise the next one coming up.
+Winter (Hanukkah, Christmas, Kwanzaa, New Year's) can blend into one season or
+show each holiday on its own. Themes only touch accent/background/glow tokens.
+
+- [x] Web: engine + Halloween, Thanksgiving (US/CA), blended winter
+      (`frontend/seasons.js`, Appearance section in Advanced, Node tests incl.
+      contrast on every blend day)
+- [ ] Batch 2 (fixed dates): Valentine's, St. Patrick's, Canada Day,
+      Independence Day
+- [ ] Batch 3 (computed dates): Easter, Passover, Lunar New Year, Eid, Diwali
+- [ ] Move palettes and date rules to a shared `docs/holidays.json` that the web
+      app and iOS app both load, tested the way `protocol-fixtures.json` is
+- [ ] iOS: Appearance section in Settings + palette override in `Theme.swift`
+- [ ] Out of scope: HA integration (no UI), app icon / PWA `theme-color` swaps
+
 - [ ] Multi-matrix support (control more than one unit from one instance)
 - [ ] Auth for the local web app itself (currently anyone on your LAN who
       can reach the proxy can control the matrix — fine for a home

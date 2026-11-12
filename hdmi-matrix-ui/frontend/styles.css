@@ -755,7 +755,8 @@ button {
   color: var(--text-dim);
 }
 
-.form-grid input {
+.form-grid input,
+.form-grid select {
   background: var(--glass-surface);
   color: var(--text);
   border: 1px solid var(--glass-border-strong);
@@ -1001,4 +1002,46 @@ button {
     --glass-border: var(--border-strong);
     --glass-border-strong: var(--text-dim);
   }
+}
+
+/* ---------- Seasonal themes ----------
+   Colors are applied inline by app.js from seasons.js; only the decoration lives here. */
+:root[data-season] .topbar__title h1::after {
+  content: var(--season-glyph);
+  content: var(--season-glyph) / "";
+  margin-left: 0.35em;
+}
+
+.form-grid .check-group {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.form-grid .check-group legend {
+  padding: 0;
+  margin-bottom: var(--space-2);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.form-grid .check {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-3);
+  font-weight: 500;
+  color: var(--text);
+  min-height: 44px;
+}
+
+.form-grid .check input {
+  width: 20px;
+  height: 20px;
+  min-height: 0;
+  padding: 0;
+  accent-color: var(--accent);
 }

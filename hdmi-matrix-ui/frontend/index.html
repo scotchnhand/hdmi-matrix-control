@@ -93,6 +93,44 @@
         </details>
 
         <details class="subsection">
+          <summary class="subsection__summary"><h3>Appearance</h3><svg class="icon icon--chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+          <div class="subsection__body">
+            <p class="card__hint">Holiday themes recolor accents and the background only. Status colors and text contrast stay as they are.</p>
+            <form class="form-grid" id="seasonForm" onsubmit="return false">
+              <label>Holiday themes
+                <select id="seasonMode">
+                  <option value="auto">Automatic (on holiday dates)</option>
+                  <option value="off">Off</option>
+                  <optgroup label="Preview" id="seasonPreview"></optgroup>
+                </select>
+              </label>
+              <label>Region
+                <select id="seasonRegion">
+                  <option value="auto">Automatic (from device language)</option>
+                  <option value="us">United States</option>
+                  <option value="ca">Canada</option>
+                  <option value="other">Elsewhere</option>
+                </select>
+              </label>
+              <label>Winter holidays
+                <select id="seasonWinter">
+                  <option value="blend">Blend into one winter season</option>
+                  <option value="individual">Show each holiday on its own</option>
+                </select>
+              </label>
+              <fieldset class="check-group" id="winterIncludes">
+                <legend>Winter holidays to include</legend>
+                <label class="check"><input type="checkbox" value="hanukkah" checked> Hanukkah</label>
+                <label class="check"><input type="checkbox" value="christmas" checked> Christmas</label>
+                <label class="check"><input type="checkbox" value="kwanzaa" checked> Kwanzaa</label>
+                <label class="check"><input type="checkbox" value="newyear" checked> New Year&rsquo;s</label>
+              </fieldset>
+              <p class="card__hint" id="seasonStatus" role="status" aria-live="polite"></p>
+            </form>
+          </div>
+        </details>
+
+        <details class="subsection">
           <summary class="subsection__summary"><h3>Rename ports</h3><svg class="icon icon--chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
           <div class="subsection__body">
             <p class="card__hint">3–15 letters, numbers, or underscores.</p>
@@ -180,6 +218,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
+<script src="seasons.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
