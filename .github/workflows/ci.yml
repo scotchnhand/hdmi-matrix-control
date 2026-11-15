@@ -179,6 +179,18 @@ jobs:
           test -f hdmi-matrix-ui/frontend/icons/icon-180.png
           test -f hdmi-matrix-ui/frontend/icons/icon-512.png
 
+  frontend-tests:
+    name: Test (web frontend holiday themes)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # Dependency-free: Node's built-in test runner. Runs the shared cases
+      # in docs/holidays.json (MatrixKit's Swift tests run the same file),
+      # checks palette contrast against styles.css, and fails if the copies
+      # of holidays.json shipped with the web and iOS apps have drifted.
+      - name: Test (node --test)
+        run: node --test hdmi-matrix-ui/frontend-tests
+
   ios-unit:
     name: iOS — MatrixKit unit tests
     runs-on: macos-15

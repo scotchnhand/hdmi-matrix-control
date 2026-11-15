@@ -95,6 +95,25 @@ final class HDMIMatrixUITests: XCTestCase {
 
     // MARK: - Focused checks
 
+    func testHolidayThemeIsOptIn() {
+        app.tabBars.buttons["Device"].tap()
+        let mode = app.buttons["holiday-mode"]
+        XCTAssertTrue(mode.waitForExistence(timeout: 5))
+        // Off by default: no theme picker until a theme is asked for.
+        expectLabel(mode, contains: "Off")
+        XCTAssertFalse(app.buttons["holiday-preview"].exists)
+
+        mode.tap()
+        app.buttons["Always"].tap()
+        let preview = app.buttons["holiday-preview"]
+        XCTAssertTrue(preview.waitForExistence(timeout: 5))
+        preview.tap()
+        app.buttons["Halloween"].tap()
+        expectLabel(preview, contains: "Halloween")
+        XCTAssertTrue(app.staticTexts["Showing the Halloween theme."].waitForExistence(timeout: 5))
+        snap("12-holiday-theme")
+    }
+
     func testRenameRejectsInvalidNames() {
         app.buttons["output-2-name"].tap()
         let field = app.textFields["rename-field"]

@@ -87,6 +87,7 @@ GitHub:
   - [`ROADMAP.md`](docs/ROADMAP.md) — what's done, planned, and deliberately rejected
   - [`DEVELOPMENT.md`](docs/DEVELOPMENT.md) — setup, testing, and branch conventions
   - [`DOCKER.md`](docs/DOCKER.md) — Docker, Portainer, and ZimaOS deployment
+  - [`HOLIDAY_THEMES.md`](docs/HOLIDAY_THEMES.md) — opt-in seasonal themes for the web and iOS apps
 - [`.github/`](.github/) — workflows, issue forms, and pull-request templates
   - [`workflows/`](.github/workflows/) — CI, release, CodeQL, and dependency updates
   - [`ISSUE_TEMPLATE/`](.github/ISSUE_TEMPLATE/) — bug-report and feature-request forms

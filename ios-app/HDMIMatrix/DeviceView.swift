@@ -6,6 +6,7 @@ import SwiftUI
 struct DeviceView: View {
     @Environment(MatrixStore.self) private var store
     @Environment(ConnectionSettings.self) private var settings
+    @Environment(AppearanceSettings.self) private var appearance
     @Binding var showingSettings: Bool
 
     private var device: MatrixState.Device? { store.state?.device }
@@ -23,6 +24,25 @@ struct DeviceView: View {
         var id: Self { self }
     }
 
+    private var holidayStatus: String {
+        if let holiday = appearance.holiday {
+            return "Showing the \(holiday.name) theme."
+        }
+        switch appearance.mode {
+        case .off:
+            return "Seasonal colors for Halloween, Thanksgiving, Christmas and other holidays. Auto shows them on the holiday's dates; Always previews one."
+        case .auto, .always:
+            guard let next = appearance.upcomingHoliday else { return "No holiday today." }
+            return "No holiday today. Next up: \(next.name)."
+        }
+    }
+
+    /// Thanksgiving appears twice (US and Canada), so say which.
+    private func holidayLabel(_ holiday: Holiday) -> String {
+        guard let regions = holiday.regions, !regions.isEmpty else { return holiday.name }
+        return "\(holiday.name) (\(regions.joined(separator: ", ")))"
+    }
+
     private var networkValid: Bool {
         [ip, mask, gateway].allSatisfy(Validation.isValidIPv4)
     }
@@ -34,6 +54,7 @@ struct DeviceView: View {
     }
 
     var body: some View {
+        @Bindable var appearance = appearance
         Form {
             Section {
                 Button {
@@ -61,6 +82,37 @@ struct DeviceView: View {
                 .accessibilityIdentifier("connection-row")
             } header: {
                 Text("Connection")
+            }
+
+            Section {
+                Picker("Holiday themes", selection: $appearance.mode) {
+                    ForEach(AppearanceSettings.Mode.allCases) { mode in
+                        Text(mode.label).tag(mode)
+                    }
+                }
+                .accessibilityIdentifier("holiday-mode")
+                if appearance.mode == .always {
+                    Picker("Theme", selection: Binding(
+                        get: { appearance.holiday?.id ?? "" },
+                        set: { appearance.previewID = $0 }
+                    )) {
+                        ForEach(appearance.catalog.holidays) { holiday in
+                            Text(holidayLabel(holiday)).tag(holiday.id)
+                        }
+                    }
+                    .accessibilityIdentifier("holiday-preview")
+                }
+                Picker("Region", selection: $appearance.region) {
+                    Text("Automatic").tag(AppearanceSettings.automaticRegion)
+                    ForEach(appearance.catalog.regions, id: \.self) { region in
+                        Text(Locale.current.localizedString(forRegionCode: region) ?? region).tag(region)
+                    }
+                }
+                .accessibilityIdentifier("holiday-region")
+            } header: {
+                Text("Appearance")
+            } footer: {
+                Text(holidayStatus)
             }
 
             Section("Matrix") {

@@ -93,6 +93,33 @@
         </details>
 
         <details class="subsection">
+          <summary class="subsection__summary"><h3>Appearance</h3><svg class="icon icon--chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+          <div class="subsection__body">
+            <p class="card__hint">Seasonal colors for Halloween, Thanksgiving, Christmas and other holidays. Off unless you turn them on.</p>
+            <div class="form-grid">
+              <label>Holiday themes
+                <select id="holidayMode">
+                  <option value="off">Off</option>
+                  <option value="auto">Auto — on the holiday's dates</option>
+                  <option value="always">Always — preview a theme</option>
+                </select>
+              </label>
+              <label id="holidayPreviewField" hidden>Theme to preview
+                <select id="holidayPreview"></select>
+              </label>
+              <label>Region
+                <select id="holidayRegion">
+                  <option value="auto">Auto — from this device</option>
+                  <option value="US">United States</option>
+                  <option value="CA">Canada</option>
+                </select>
+              </label>
+            </div>
+            <p class="card__hint" id="holidayStatus" role="status" aria-live="polite"></p>
+          </div>
+        </details>
+
+        <details class="subsection">
           <summary class="subsection__summary"><h3>Rename ports</h3><svg class="icon icon--chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
           <div class="subsection__body">
             <p class="card__hint">3–15 letters, numbers, or underscores.</p>
@@ -180,6 +207,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
+<script src="holidays.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

@@ -1,0 +1,170 @@
+{
+  "_comment": [
+    "Holiday themes shared by the web app and the iOS app. See docs/HOLIDAY_THEMES.md.",
+    "This file is the source of truth; hdmi-matrix-ui/frontend/holidays.json and",
+    "ios-app/MatrixKit/Sources/MatrixKit/Resources/holidays.json are byte-identical copies (CI checks).",
+    "The web suite (hdmi-matrix-ui/frontend-tests) and MatrixKit's Swift tests both run the cases below."
+  ],
+  "version": 1,
+  "tokens": ["accent", "accent-text", "bg", "glow-a", "glow-b"],
+  "regions": ["US", "CA"],
+  "holidays": [
+    {
+      "id": "cyber-monday",
+      "name": "Cyber Monday",
+      "rule": { "type": "offset", "from": "thanksgiving-us", "days": 4 },
+      "window": { "before": 0, "after": 0 },
+      "palette": {
+        "dark": { "accent": "#4de8f0", "accent-text": "#00272a", "bg": "#070a14", "glow-a": "#00e5ff", "glow-b": "#c13cff" },
+        "light": { "accent": "#005f69", "accent-text": "#ffffff", "bg": "#eef3f7", "glow-a": "#00b8d4", "glow-b": "#c13cff" }
+      }
+    },
+    {
+      "id": "black-friday",
+      "name": "Black Friday",
+      "rule": { "type": "offset", "from": "thanksgiving-us", "days": 1 },
+      "window": { "before": 0, "after": 2 },
+      "palette": {
+        "dark": { "accent": "#ffd23f", "accent-text": "#2a2000", "bg": "#050505", "glow-a": "#ffd23f", "glow-b": "#ffffff" },
+        "light": { "accent": "#1c1c1c", "accent-text": "#ffffff", "bg": "#f2f2f2", "glow-a": "#ffc400", "glow-b": "#000000" }
+      }
+    },
+    {
+      "id": "thanksgiving-us",
+      "name": "Thanksgiving",
+      "regions": ["US"],
+      "rule": { "type": "nth-weekday", "month": 11, "weekday": 4, "n": 4 },
+      "window": { "before": 3, "after": 0 },
+      "palette": {
+        "dark": { "accent": "#f0a858", "accent-text": "#2a1500", "bg": "#0f0b08", "glow-a": "#d9772b", "glow-b": "#b5532a" },
+        "light": { "accent": "#874510", "accent-text": "#ffffff", "bg": "#f5efe6", "glow-a": "#d9772b", "glow-b": "#b5532a" }
+      }
+    },
+    {
+      "id": "thanksgiving-ca",
+      "name": "Thanksgiving",
+      "regions": ["CA"],
+      "rule": { "type": "nth-weekday", "month": 10, "weekday": 1, "n": 2 },
+      "window": { "before": 3, "after": 0 },
+      "palette": {
+        "dark": { "accent": "#ffa24d", "accent-text": "#2e1400", "bg": "#100a08", "glow-a": "#e0452f", "glow-b": "#f0a030" },
+        "light": { "accent": "#8a4200", "accent-text": "#ffffff", "bg": "#f6eee8", "glow-a": "#e0452f", "glow-b": "#f0a030" }
+      }
+    },
+    {
+      "id": "halloween",
+      "name": "Halloween",
+      "rule": { "type": "fixed", "month": 10, "day": 31 },
+      "window": { "before": 10, "after": 0 },
+      "palette": {
+        "dark": { "accent": "#ff9a3c", "accent-text": "#2b1200", "bg": "#0d0a10", "glow-a": "#ff7a1a", "glow-b": "#8b5cf6" },
+        "light": { "accent": "#923a00", "accent-text": "#ffffff", "bg": "#f6efe8", "glow-a": "#ff7a1a", "glow-b": "#8b5cf6" }
+      }
+    },
+    {
+      "id": "christmas",
+      "name": "Christmas",
+      "rule": { "type": "fixed", "month": 12, "day": 25 },
+      "window": { "before": 14, "after": 1 },
+      "palette": {
+        "dark": { "accent": "#f2c14e", "accent-text": "#2a1d00", "bg": "#070d0a", "glow-a": "#d42f3a", "glow-b": "#1f9d55" },
+        "light": { "accent": "#6e5200", "accent-text": "#ffffff", "bg": "#f1f5f0", "glow-a": "#d42f3a", "glow-b": "#1f9d55" }
+      }
+    },
+    {
+      "id": "new-year",
+      "name": "New Year's",
+      "rule": { "type": "fixed", "month": 1, "day": 1 },
+      "window": { "before": 1, "after": 0 },
+      "palette": {
+        "dark": { "accent": "#d4bfff", "accent-text": "#1f0f45", "bg": "#08081a", "glow-a": "#7c5cff", "glow-b": "#f5c542" },
+        "light": { "accent": "#4b2aa8", "accent-text": "#ffffff", "bg": "#f1eff8", "glow-a": "#7c5cff", "glow-b": "#f5c542" }
+      }
+    },
+    {
+      "id": "valentines",
+      "name": "Valentine's Day",
+      "rule": { "type": "fixed", "month": 2, "day": 14 },
+      "window": { "before": 6, "after": 0 },
+      "palette": {
+        "dark": { "accent": "#ff8fc7", "accent-text": "#3d0a25", "bg": "#110a0e", "glow-a": "#ff4f9a", "glow-b": "#c94bff" },
+        "light": { "accent": "#9c1458", "accent-text": "#ffffff", "bg": "#f8eef2", "glow-a": "#ff4f9a", "glow-b": "#c94bff" }
+      }
+    }
+  ],
+  "cases": {
+    "active": [
+      { "date": "2026-10-20", "region": "US", "expect": null },
+      { "date": "2026-10-21", "region": "US", "expect": "halloween" },
+      { "date": "2026-10-31", "region": "CA", "expect": "halloween" },
+      { "date": "2026-11-01", "region": "US", "expect": null },
+
+      { "date": "2026-11-22", "region": "US", "expect": null },
+      { "date": "2026-11-23", "region": "US", "expect": "thanksgiving-us" },
+      { "date": "2026-11-26", "region": "US", "expect": "thanksgiving-us" },
+      { "date": "2026-11-26", "region": "CA", "expect": null },
+      { "date": "2026-11-26", "region": "GB", "expect": null },
+      { "date": "2027-11-25", "region": "US", "expect": "thanksgiving-us" },
+      { "date": "2028-11-23", "region": "US", "expect": "thanksgiving-us" },
+      { "date": "2029-11-22", "region": "US", "expect": "thanksgiving-us" },
+      { "date": "2030-11-28", "region": "US", "expect": "thanksgiving-us" },
+
+      { "date": "2026-11-27", "region": "US", "expect": "black-friday" },
+      { "date": "2026-11-27", "region": "CA", "expect": "black-friday" },
+      { "date": "2026-11-27", "region": "GB", "expect": "black-friday" },
+      { "date": "2026-11-29", "region": "US", "expect": "black-friday" },
+      { "date": "2028-11-24", "region": "US", "expect": "black-friday" },
+      { "date": "2030-11-29", "region": "US", "expect": "black-friday" },
+
+      { "date": "2026-11-30", "region": "US", "expect": "cyber-monday" },
+      { "date": "2026-11-30", "region": "CA", "expect": "cyber-monday" },
+      { "date": "2028-11-27", "region": "US", "expect": "cyber-monday" },
+      { "date": "2030-12-02", "region": "US", "expect": "cyber-monday" },
+      { "date": "2026-12-01", "region": "US", "expect": null },
+
+      { "date": "2026-10-08", "region": "CA", "expect": null },
+      { "date": "2026-10-09", "region": "CA", "expect": "thanksgiving-ca" },
+      { "date": "2026-10-12", "region": "CA", "expect": "thanksgiving-ca" },
+      { "date": "2026-10-12", "region": "US", "expect": null },
+      { "date": "2026-10-13", "region": "CA", "expect": null },
+      { "date": "2027-10-11", "region": "CA", "expect": "thanksgiving-ca" },
+      { "date": "2028-10-09", "region": "CA", "expect": "thanksgiving-ca" },
+
+      { "date": "2026-12-10", "region": "US", "expect": null },
+      { "date": "2026-12-11", "region": "US", "expect": "christmas" },
+      { "date": "2026-12-25", "region": "GB", "expect": "christmas" },
+      { "date": "2026-12-26", "region": "CA", "expect": "christmas" },
+      { "date": "2026-12-27", "region": "US", "expect": null },
+
+      { "date": "2026-12-30", "region": "US", "expect": null },
+      { "date": "2026-12-31", "region": "US", "expect": "new-year" },
+      { "date": "2027-01-01", "region": "CA", "expect": "new-year" },
+      { "date": "2027-01-02", "region": "US", "expect": null },
+
+      { "date": "2027-02-07", "region": "US", "expect": null },
+      { "date": "2027-02-08", "region": "US", "expect": "valentines" },
+      { "date": "2028-02-14", "region": "CA", "expect": "valentines" },
+      { "date": "2027-02-15", "region": "US", "expect": null },
+
+      { "date": "2026-07-04", "region": "US", "expect": null },
+      { "date": "2028-02-29", "region": "US", "expect": null }
+    ],
+    "upcoming": [
+      { "date": "2026-11-15", "region": "US", "expect": "thanksgiving-us" },
+      { "date": "2026-11-15", "region": "CA", "expect": "black-friday" },
+      { "date": "2026-11-27", "region": "US", "expect": "black-friday" },
+      { "date": "2026-12-27", "region": "US", "expect": "new-year" },
+      { "date": "2027-01-02", "region": "US", "expect": "valentines" },
+      { "date": "2027-02-15", "region": "CA", "expect": "thanksgiving-ca" },
+      { "date": "2027-02-15", "region": "US", "expect": "halloween" }
+    ],
+    "locale_regions": [
+      { "locale": "en-US", "expect": "US" },
+      { "locale": "en_US", "expect": "US" },
+      { "locale": "fr-CA", "expect": "CA" },
+      { "locale": "en_CA", "expect": "CA" },
+      { "locale": "en-GB", "expect": "GB" },
+      { "locale": "zh-Hans-CN", "expect": "CN" }
+    ]
+  }
+}
