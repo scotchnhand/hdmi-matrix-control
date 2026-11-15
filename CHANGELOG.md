@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/scotchnhand/hdmi-matrix-control/compare/v1.5.0...v1.5.1) (2026-11-15)
+
+
+### Bug Fixes
+
+* **ios:** make connection handling more resilient ([#97](https://github.com/scotchnhand/hdmi-matrix-control/issues/97)) ([3b13415](https://github.com/scotchnhand/hdmi-matrix-control/commit/3b134159188e84b458870f4f40f1d997bb87d2ca))
+
 ## [1.5.0](https://github.com/scotchnhand/hdmi-matrix-control/compare/v1.4.0...v1.5.0) (2026-10-31)
 
 
