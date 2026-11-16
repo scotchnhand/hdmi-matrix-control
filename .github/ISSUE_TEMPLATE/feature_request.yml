@@ -1,5 +1,5 @@
 name: Feature request
-description: Suggest an improvement to the web app, the Home Assistant integration, or the docs
+description: Suggest an improvement to the web app, the Home Assistant integration, the iOS app, or the docs
 labels: ["enhancement"]
 body:
   - type: dropdown
@@ -9,7 +9,8 @@ body:
       options:
         - Web app (hdmi-matrix-ui)
         - Home Assistant integration (ha-hdmi-matrix)
-        - Both
+        - iOS app (ios-app)
+        - More than one
         - Not sure
     validations:
       required: true

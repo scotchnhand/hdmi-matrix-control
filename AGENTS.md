@@ -19,7 +19,7 @@ Run Python tests from the relevant subproject directory with `pytest tests/ -v`;
 
 Python formatting and lint rules are configured in root `pyproject.toml`: Ruff, 110-character configured line length, import sorting, and Python 3.11 syntax. Follow existing Swift and JavaScript conventions in their respective modules. Name Python tests `test_*.py` and test functions `test_*`.
 
-The web app and Home Assistant integration have separate copies of `matrix_client.py`. Keep both protocol clients in sync when changing shared behavior; CI checks their consistency. Protocol behavior changes start in `docs/protocol-fixtures.json`, which the Python suites and MatrixKit's Swift tests all run. Add or update focused tests for behavior changes. Tests use mocks and fakes; they do not require real matrix hardware.
+The web app and Home Assistant integration have separate copies of `matrix_client.py`. Keep both protocol clients in sync when changing shared behavior; CI checks their consistency. Protocol behavior changes start in `docs/protocol-fixtures.json`, which the Python suites and MatrixKit's Swift tests all run. Holiday themes work the same way: `docs/holidays.json` is the source of truth (see `docs/HOLIDAY_THEMES.md`), with byte-identical copies in `hdmi-matrix-ui/frontend/` and `ios-app/MatrixKit/Sources/MatrixKit/Resources/`; run `node --test hdmi-matrix-ui/frontend-tests/*.test.js` after changing it. Add or update focused tests for behavior changes. Tests use mocks and fakes; they do not require real matrix hardware.
 
 ## Commits and Pull Requests
 
