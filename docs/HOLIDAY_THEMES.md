@@ -45,7 +45,7 @@ After editing the source, copy it over both and run the tests:
 ```bash
 cp docs/holidays.json hdmi-matrix-ui/frontend/holidays.json
 cp docs/holidays.json ios-app/MatrixKit/Sources/MatrixKit/Resources/holidays.json
-node --test hdmi-matrix-ui/frontend-tests
+node --test hdmi-matrix-ui/frontend-tests/*.test.js
 (cd ios-app/MatrixKit && swift test)
 ```
 

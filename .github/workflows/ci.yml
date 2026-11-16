@@ -189,7 +189,7 @@ jobs:
       # checks palette contrast against styles.css, and fails if the copies
       # of holidays.json shipped with the web and iOS apps have drifted.
       - name: Test (node --test)
-        run: node --test hdmi-matrix-ui/frontend-tests
+        run: node --test hdmi-matrix-ui/frontend-tests/*.test.js
 
   ios-unit:
     name: iOS — MatrixKit unit tests

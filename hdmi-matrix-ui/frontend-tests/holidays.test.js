@@ -3,7 +3,7 @@
 // Runs the shared cases in docs/holidays.json against the web app's
 // holiday logic -- the same file MatrixKit's HolidayFixtureTests.swift
 // runs -- and checks the palettes against the stylesheet's contrast
-// baseline. No dependencies: `node --test hdmi-matrix-ui/frontend-tests`.
+// baseline. No dependencies: `node --test hdmi-matrix-ui/frontend-tests/*.test.js`.
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
