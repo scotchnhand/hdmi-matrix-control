@@ -755,7 +755,8 @@ button {
   color: var(--text-dim);
 }
 
-.form-grid input {
+.form-grid input,
+.form-grid select {
   background: var(--glass-surface);
   color: var(--text);
   border: 1px solid var(--glass-border-strong);

@@ -117,6 +117,9 @@ backend/
 frontend/
   index.html / styles.css / app.js
   manifest.json / sw.js   PWA install + offline app-shell
+  holidays.js / holidays.json   opt-in holiday themes (copy of docs/holidays.json)
+frontend-tests/
+  holidays.test.js     node --test: shared holiday cases + palette contrast
   icons/
 ```
 

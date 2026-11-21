@@ -9,6 +9,11 @@ const el = {
   inputList: document.getElementById('inputList'),
   advancedToggle: document.getElementById('advancedToggle'),
   advancedPanel: document.getElementById('advancedPanel'),
+  holidayMode: document.getElementById('holidayMode'),
+  holidayRegion: document.getElementById('holidayRegion'),
+  holidayPreview: document.getElementById('holidayPreview'),
+  holidayPreviewField: document.getElementById('holidayPreviewField'),
+  holidayStatus: document.getElementById('holidayStatus'),
   infoIp: document.getElementById('infoIp'),
   infoAccount: document.getElementById('infoAccount'),
   infoFirmware: document.getElementById('infoFirmware'),
@@ -76,6 +81,162 @@ function toggleTheme() {
 
 el.themeToggle.addEventListener('click', toggleTheme);
 initTheme();
+
+// ---------- holiday themes ----------
+//
+// Opt-in seasonal palettes (Advanced > Appearance). holidays.json says when
+// each holiday is on and which palette tokens it overrides; holidays.js
+// turns that into a stylesheet. Nothing here leaves the app's own origin.
+
+const HOLIDAY_KEYS = {
+  mode: 'hdmi-matrix-holiday-mode',       // off | auto | always
+  region: 'hdmi-matrix-holiday-region',   // auto | US | CA
+  preview: 'hdmi-matrix-holiday-preview', // holiday id shown by "always"
+  css: 'hdmi-matrix-holiday-css',         // last applied stylesheet, to avoid a flash on load
+};
+const HOLIDAY_RECHECK_MS = 60 * 60 * 1000;
+
+let holidayCatalog = null;
+let holidayLoadFailed = false;
+
+function readStored(key, allowed, fallback) {
+  try {
+    const value = localStorage.getItem(key);
+    return value !== null && (!allowed || allowed.includes(value)) ? value : fallback;
+  } catch (e) {
+    return fallback;
+  }
+}
+
+function writeStored(key, value) {
+  try {
+    if (value === null) localStorage.removeItem(key);
+    else localStorage.setItem(key, value);
+  } catch (e) { /* private mode, ignore */ }
+}
+
+function holidaySettings() {
+  return {
+    mode: readStored(HOLIDAY_KEYS.mode, ['off', 'auto', 'always'], 'off'),
+    region: readStored(HOLIDAY_KEYS.region, ['auto', 'US', 'CA'], 'auto'),
+    preview: readStored(HOLIDAY_KEYS.preview, null, ''),
+  };
+}
+
+function holidayRegion(setting) {
+  if (setting !== 'auto') return setting;
+  const locales = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language];
+  for (const locale of locales) {
+    const region = HolidayThemes.regionFromLocale(locale);
+    if (region) return region;
+  }
+  return '';
+}
+
+function setHolidayStyle(css, holidayId) {
+  let style = document.getElementById('holidayThemeStyle');
+  if (!css) {
+    if (style) style.remove();
+    document.documentElement.removeAttribute('data-holiday');
+    return;
+  }
+  if (!style) {
+    style = document.createElement('style');
+    style.id = 'holidayThemeStyle';
+    document.head.appendChild(style);
+  }
+  if (style.textContent !== css) style.textContent = css;
+  if (holidayId) document.documentElement.setAttribute('data-holiday', holidayId);
+}
+
+function applyHolidayTheme() {
+  const settings = holidaySettings();
+  el.holidayMode.value = settings.mode;
+  el.holidayRegion.value = settings.region;
+  el.holidayPreviewField.hidden = settings.mode !== 'always';
+
+  if (settings.mode === 'off') {
+    setHolidayStyle('');
+    writeStored(HOLIDAY_KEYS.css, null);
+    el.holidayStatus.textContent = '';
+    return;
+  }
+  if (!holidayCatalog) {
+    if (holidayLoadFailed) el.holidayStatus.textContent = 'Holiday themes could not be loaded.';
+    return; // keep whatever the cached stylesheet is showing until the catalog arrives
+  }
+
+  const today = HolidayThemes.fromLocalDate(new Date());
+  const region = holidayRegion(settings.region);
+  let holiday;
+  if (settings.mode === 'always') {
+    holiday = holidayCatalog.holidays.find((h) => h.id === settings.preview)
+      || HolidayThemes.upcomingHoliday(holidayCatalog, today, region)
+      || holidayCatalog.holidays[0];
+    if (holiday) el.holidayPreview.value = holiday.id;
+  } else {
+    holiday = HolidayThemes.activeHoliday(holidayCatalog, today, region);
+  }
+
+  const css = holiday ? HolidayThemes.themeCss(holidayCatalog, holiday) : '';
+  setHolidayStyle(css, holiday && holiday.id);
+  writeStored(HOLIDAY_KEYS.css, css || null);
+  if (css) {
+    el.holidayStatus.textContent = `Showing the ${holiday.name} theme.`;
+  } else {
+    const next = HolidayThemes.upcomingHoliday(holidayCatalog, today, region);
+    el.holidayStatus.textContent = next
+      ? `No holiday today. Next up: ${next.name}.`
+      : 'No holiday today.';
+  }
+}
+
+function fillHolidayPreviewOptions() {
+  el.holidayPreview.replaceChildren(...holidayCatalog.holidays.map((holiday) => {
+    const option = document.createElement('option');
+    option.value = holiday.id;
+    const regions = Array.isArray(holiday.regions) ? ` (${holiday.regions.join(', ')})` : '';
+    option.textContent = holiday.name + regions;
+    return option;
+  }));
+}
+
+function initHolidayThemes() {
+  // Re-apply the last stylesheet straight away so a themed page doesn't
+  // flash the default palette while holidays.json loads.
+  if (holidaySettings().mode !== 'off') setHolidayStyle(readStored(HOLIDAY_KEYS.css, null, ''));
+  applyHolidayTheme();
+
+  el.holidayMode.addEventListener('change', () => {
+    writeStored(HOLIDAY_KEYS.mode, el.holidayMode.value);
+    applyHolidayTheme();
+  });
+  el.holidayRegion.addEventListener('change', () => {
+    writeStored(HOLIDAY_KEYS.region, el.holidayRegion.value);
+    applyHolidayTheme();
+  });
+  el.holidayPreview.addEventListener('change', () => {
+    writeStored(HOLIDAY_KEYS.preview, el.holidayPreview.value);
+    applyHolidayTheme();
+  });
+
+  // "Auto" follows the calendar: recheck when the tab comes back and hourly.
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) applyHolidayTheme();
+  });
+  setInterval(applyHolidayTheme, HOLIDAY_RECHECK_MS);
+
+  fetch('holidays.json')
+    .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`holidays.json ${res.status}`))))
+    .then((catalog) => {
+      holidayCatalog = catalog;
+      fillHolidayPreviewOptions();
+    })
+    .catch(() => { holidayLoadFailed = true; })
+    .then(applyHolidayTheme);
+}
+
+initHolidayThemes();
 
 // ---------- networking ----------
 

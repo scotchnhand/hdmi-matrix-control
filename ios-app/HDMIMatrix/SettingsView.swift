@@ -16,6 +16,7 @@ struct SettingsView: View {
             Form {
                 Section {
                     Toggle("Demo mode", isOn: $demoMode)
+                        .tint(.green) // on/off color stays fixed under a holiday theme
                         .accessibilityIdentifier("demo-toggle")
                 } footer: {
                     Text("Uses a simulated matrix — no hardware needed.")

@@ -8,7 +8,8 @@ let package = Package(
         .library(name: "MatrixKit", targets: ["MatrixKit"]),
     ],
     targets: [
-        .target(name: "MatrixKit"),
+        // holidays.json is a copy of docs/holidays.json (CI checks they match).
+        .target(name: "MatrixKit", resources: [.copy("Resources/holidays.json")]),
         .testTarget(name: "MatrixKitTests", dependencies: ["MatrixKit"]),
     ]
 )

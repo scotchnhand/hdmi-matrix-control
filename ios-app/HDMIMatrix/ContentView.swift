@@ -193,4 +193,5 @@ struct ConnectionAccessory: View {
     ContentView()
         .environment(MatrixStore.preview())
         .environment(ConnectionSettings())
+        .environment(AppearanceSettings())
 }
