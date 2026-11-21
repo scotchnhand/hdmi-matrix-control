@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/scotchnhand/hdmi-matrix-control/compare/v1.5.1...v1.6.0) (2026-11-21)
+
+
+### Features
+
+* add opt-in holiday themes to the web and iOS apps ([#105](https://github.com/scotchnhand/hdmi-matrix-control/issues/105)) ([1bbb0e3](https://github.com/scotchnhand/hdmi-matrix-control/commit/1bbb0e3981417b0690a93c4fa62e458c9e02222d))
+
 ## [1.5.1](https://github.com/scotchnhand/hdmi-matrix-control/compare/v1.5.0...v1.5.1) (2026-11-15)
 
 
