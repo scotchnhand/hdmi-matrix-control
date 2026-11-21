@@ -1,18 +1,22 @@
 version: 2
+
+# Keep version bumps together so one weekly review covers the repository.
+multi-ecosystem-groups:
+  all-dependencies:
+    schedule:
+      interval: "weekly"
+
 updates:
-  # Keep CI Actions current -- the main ongoing "continuous improvement"
-  # surface, since both subprojects otherwise have very few dependencies.
   - package-ecosystem: "github-actions"
     directory: "/"
-    schedule:
-      interval: "weekly"
+    patterns:
+      - "*"
+    multi-ecosystem-group: "all-dependencies"
 
   - package-ecosystem: "pip"
-    directory: "/hdmi-matrix-ui"
-    schedule:
-      interval: "weekly"
-
-  - package-ecosystem: "pip"
-    directory: "/ha-hdmi-matrix"
-    schedule:
-      interval: "weekly"
+    directories:
+      - "/hdmi-matrix-ui"
+      - "/ha-hdmi-matrix"
+    patterns:
+      - "*"
+    multi-ecosystem-group: "all-dependencies"
